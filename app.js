@@ -304,6 +304,16 @@ function renderAllTables() {
   renderAbastecimentos();
   renderDanos();
   renderVeiculos();
+  renderTrocaOleo();
+}
+
+function sortByDate(data) {
+  return [...data].sort((a, b) => {
+    if (!a.data || !b.data) return 0;
+    const dateA = a.data.split('/').reverse().join('');
+    const dateB = b.data.split('/').reverse().join('');
+    return dateB.localeCompare(dateA); // Do mais recente para o mais antigo
+  });
 }
 
 function filterData(data) {
@@ -359,8 +369,9 @@ function filterData(data) {
 function renderMultas() {
   const tbody = document.querySelector('#tabelaMultas tbody');
   const filtered = filterData(state.multas);
+  const sorted = sortByDate(filtered);
 
-  tbody.innerHTML = filtered.map(m => {
+  tbody.innerHTML = sorted.map(m => {
     const statusClass = m.status === 'Pago' ? 'badge-resolvido' : 'badge-pendente';
     return `
     <tr>
@@ -387,8 +398,9 @@ function renderMultas() {
 function renderAbastecimentos() {
   const tbody = document.querySelector('#tabelaAbastecimentos tbody');
   const filtered = filterData(state.abastecimentos);
+  const sorted = sortByDate(filtered);
 
-  tbody.innerHTML = filtered.map(a => `
+  tbody.innerHTML = sorted.map(a => `
     <tr>
       <td>${a.data}</td>
       <td>${a.veiculo}</td>
@@ -403,8 +415,9 @@ function renderAbastecimentos() {
 function renderDanos() {
   const tbody = document.querySelector('#tabelaDanos tbody');
   const filtered = filterData(state.danos);
+  const sorted = sortByDate(filtered);
 
-  tbody.innerHTML = filtered.map(d => `
+  tbody.innerHTML = sorted.map(d => `
     <tr>
       <td>${d.data}</td>
       <td>${d.veiculo}</td>
@@ -466,8 +479,9 @@ function renderVeiculos() {
 
 function renderTrocaOleo() {
   const tbody = document.querySelector('#tabelaOleo tbody');
+  const sorted = sortByDate(state.trocasOleo);
 
-  tbody.innerHTML = state.trocasOleo.map(o => `
+  tbody.innerHTML = sorted.map(o => `
     <tr>
       <td>${o.data}</td>
       <td>${o.veiculo}</td>
