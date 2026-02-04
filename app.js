@@ -81,6 +81,8 @@ function applyMonthFilter() {
 function initForms() {
   // Multas
   document.getElementById('btnSalvarMulta').addEventListener('click', saveMulta);
+  // OCR
+  document.getElementById('btnExtrairDados').addEventListener('click', extractOCRData);
   // Abastecimentos
   document.getElementById('btnSalvarAbast').addEventListener('click', saveAbastecimento);
   // Troca de Óleo
@@ -683,3 +685,215 @@ function clearForm(prefix) {
     }
   });
 }
+
+// ===== OCR - EXTRAÇÃO DE DADOS DE PDF =====
+const VISION_API_KEY = 'AIzaSyDyVTtNJPx7dYP5j5Dz5VFQXq01KZyfB2k';
+const VISION_API_URL = `https://vision.googleapis.com/v1/images:annotate?key=${VISION_API_KEY}`;
+
+async function extractOCRData() {
+  const fileInput = document.getElementById('multa-pdf-ocr');
+  const statusEl = document.getElementById('statusOCR');
+  const btn = document.getElementById('btnExtrairDados');
+
+  if (!fileInput.files || fileInput.files.length === 0) {
+    statusEl.textContent = 'Selecione um arquivo primeiro';
+    statusEl.className = 'status-msg status-error';
+    return;
+  }
+
+  const file = fileInput.files[0];
+
+  // Verificar tipo de arquivo
+  if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+    statusEl.textContent = 'Formato não suportado. Use imagem ou PDF.';
+    statusEl.className = 'status-msg status-error';
+    return;
+  }
+
+  btn.disabled = true;
+  statusEl.textContent = 'Processando...';
+  statusEl.className = 'status-msg status-saving';
+
+  try {
+    // Converter arquivo para base64
+    const base64 = await fileToBase64(file);
+
+    // Chamar Vision API
+    const response = await fetch(VISION_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        requests: [{
+          image: {
+            content: base64
+          },
+          features: [{
+            type: 'TEXT_DETECTION',
+            maxResults: 1
+          }]
+        }]
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.error) {
+      throw new Error(data.error.message);
+    }
+
+    if (!data.responses || !data.responses[0] || !data.responses[0].textAnnotations) {
+      throw new Error('Não foi possível extrair texto do documento');
+    }
+
+    const fullText = data.responses[0].textAnnotations[0].description;
+    console.log('Texto extraído:', fullText);
+
+    // Parsear os dados do texto
+    const dadosExtraidos = parseMultaText(fullText);
+
+    // Preencher formulário
+    fillMultaForm(dadosExtraidos);
+
+    statusEl.textContent = '✓ Dados extraídos! Verifique e complete o formulário.';
+    statusEl.className = 'status-msg status-saved';
+
+  } catch (error) {
+    console.error('Erro OCR:', error);
+    statusEl.textContent = 'Erro: ' + error.message;
+    statusEl.className = 'status-msg status-error';
+  }
+
+  btn.disabled = false;
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      // Remover prefixo "data:...;base64,"
+      const base64 = reader.result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function parseMultaText(text) {
+  const dados = {
+    placa: '',
+    data: '',
+    auto: '',
+    valor: '',
+    tipo: ''
+  };
+
+  // Normalizar texto
+  const textoNorm = text.toUpperCase();
+  const linhas = text.split('\n');
+
+  // Extrair PLACA (formato ABC1234 ou ABC1D23)
+  const placaMatch = textoNorm.match(/\b([A-Z]{3}[\s-]?[0-9][A-Z0-9][0-9]{2})\b/);
+  if (placaMatch) {
+    dados.placa = placaMatch[1].replace(/[\s-]/g, '');
+  }
+
+  // Extrair DATA (formato DD/MM/YYYY)
+  const dataMatch = text.match(/\b(\d{2}\/\d{2}\/\d{4})\b/);
+  if (dataMatch) {
+    const partes = dataMatch[1].split('/');
+    dados.data = `${partes[2]}-${partes[1]}-${partes[0]}`; // Formato YYYY-MM-DD
+  }
+
+  // Extrair AUTO DE INFRAÇÃO (geralmente começa com letras e números)
+  const autoMatches = [
+    textoNorm.match(/AUTO\s*(?:DE\s*)?(?:INFRA[ÇC][AÃ]O)?\s*(?:N[°º]?)?\s*:?\s*([A-Z0-9]{6,})/i),
+    textoNorm.match(/N[°º]?\s*(?:DO\s*)?AIT\s*:?\s*([A-Z0-9]{6,})/i),
+    textoNorm.match(/AIT\s*:?\s*([A-Z0-9]{6,})/i),
+    textoNorm.match(/IDENTIFICA[ÇC][AÃ]O\s*DO\s*AUTO[^A-Z0-9]*([A-Z0-9]{6,})/i)
+  ];
+
+  for (const match of autoMatches) {
+    if (match && match[1]) {
+      dados.auto = match[1].trim();
+      break;
+    }
+  }
+
+  // Extrair VALOR (R$ XXX,XX ou XXX.XX)
+  const valorMatches = [
+    text.match(/R\$\s*([\d.,]+)/),
+    text.match(/VALOR\s*(?:DA\s*)?(?:MULTA)?\s*:?\s*R?\$?\s*([\d.,]+)/i),
+    text.match(/([\d]{1,3}[.,]\d{2})\s*$/m)
+  ];
+
+  for (const match of valorMatches) {
+    if (match && match[1]) {
+      let valor = match[1].replace(/\./g, '').replace(',', '.');
+      if (parseFloat(valor) > 0) {
+        dados.valor = parseFloat(valor);
+        break;
+      }
+    }
+  }
+
+  // Extrair TIPO/DESCRIÇÃO DA INFRAÇÃO
+  const tipoMatches = [
+    text.match(/DESCRI[CÇ][AÃ]O\s*(?:DA\s*)?(?:INFRA[CÇ][AÃ]O)?\s*:?\s*([^\n]+)/i),
+    text.match(/INFRA[CÇ][AÃ]O\s*:?\s*([^\n]+)/i),
+    text.match(/TRANSITAR\s+[^\n]+/i),
+    text.match(/DIRIGIR\s+[^\n]+/i),
+    text.match(/ESTACIONAR\s+[^\n]+/i)
+  ];
+
+  for (const match of tipoMatches) {
+    if (match) {
+      const tipo = (match[1] || match[0]).trim();
+      if (tipo.length > 10) {
+        dados.tipo = tipo.substring(0, 100); // Limitar tamanho
+        break;
+      }
+    }
+  }
+
+  console.log('Dados parseados:', dados);
+  return dados;
+}
+
+function fillMultaForm(dados) {
+  // Data
+  if (dados.data) {
+    document.getElementById('multa-data').value = dados.data;
+  }
+
+  // Veículo (tentar selecionar)
+  if (dados.placa) {
+    const selectVeiculo = document.getElementById('multa-veiculo');
+    const placaUpper = dados.placa.toUpperCase();
+
+    for (let i = 0; i < selectVeiculo.options.length; i++) {
+      if (selectVeiculo.options[i].value.toUpperCase().includes(placaUpper)) {
+        selectVeiculo.selectedIndex = i;
+        break;
+      }
+    }
+  }
+
+  // Auto de infração
+  if (dados.auto) {
+    document.getElementById('multa-auto').value = dados.auto;
+  }
+
+  // Tipo de multa
+  if (dados.tipo) {
+    document.getElementById('multa-tipo').value = dados.tipo;
+  }
+
+  // Valor
+  if (dados.valor) {
+    document.getElementById('multa-valor').value = dados.valor;
+  }
+}
+

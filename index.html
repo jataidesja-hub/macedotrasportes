@@ -87,6 +87,18 @@
     <!-- Seção Multas -->
     <section id="sec-multas" class="secao">
       <h2>Multas</h2>
+
+      <!-- OCR Box -->
+      <div class="ocr-box">
+        <h3>📄 Leitura Automática de PDF</h3>
+        <p>Faça upload do PDF da notificação para preencher automaticamente os campos</p>
+        <div class="ocr-upload">
+          <input type="file" id="multa-pdf-ocr" accept="image/*,application/pdf">
+          <button id="btnExtrairDados" type="button">🔍 Extrair Dados</button>
+          <span id="statusOCR" class="status-msg"></span>
+        </div>
+      </div>
+
       <div class="form-grid">
         <label>Data<input type="date" id="multa-data"></label>
         <label>Veículo<select id="multa-veiculo"></select></label>
