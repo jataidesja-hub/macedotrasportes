@@ -309,10 +309,20 @@ function renderAllTables() {
 
 function sortByDate(data) {
   return [...data].sort((a, b) => {
-    if (!a.data || !b.data) return 0;
-    const dateA = a.data.split('/').reverse().join('');
-    const dateB = b.data.split('/').reverse().join('');
-    return dateB.localeCompare(dateA); // Do mais recente para o mais antigo
+    const dataA = (a.data || '').trim();
+    const dataB = (b.data || '').trim();
+
+    // Se ambos vazios, mantém posição
+    if (!dataA && !dataB) return 0;
+    // Se um vazio, joga para o fim (baixo)
+    if (!dataA) return 1;
+    if (!dataB) return -1;
+
+    // Converter DD/MM/YYYY para YYYYMMDD para comparação de string
+    const d1 = dataA.split('/').reverse().join('');
+    const d2 = dataB.split('/').reverse().join('');
+
+    return d2.localeCompare(d1); // Mais recente primeiro
   });
 }
 
