@@ -139,13 +139,14 @@ function criarPlanilha() {
     multasSheet = ss.insertSheet('Multas');
   }
   multasSheet.clear();
-  multasSheet.getRange(1, 1, 1, 8).setValues([[
+  multasSheet.getRange(1, 1, 1, 9).setValues([[
     'Data', 'Veículo', 'Motorista', 'Tipo de Multa',
-    'Auto da infração', 'Anexo (link)', 'Valor', 'Status'
+    'Auto da infração', 'Anexo (link)', 'Valor', 'Status', 'Data Limite Condutor'
   ]]).setFontWeight('bold');
   multasSheet.setFrozenRows(1);
   multasSheet.getRange('A:A').setNumberFormat('dd/MM/yyyy');
   multasSheet.getRange('G:G').setNumberFormat('R$ #,##0.00');
+  multasSheet.getRange('I:I').setNumberFormat('dd/MM/yyyy');
 
   // === ABASTECIMENTOS ===
   let abastecimentosSheet = ss.getSheetByName('Abastecimentos');
@@ -229,7 +230,7 @@ function getDadosMultas() {
   const lastRow = sh.getLastRow();
   if (lastRow < 2) return [];
   const lastCol = sh.getLastColumn();
-  const numCols = Math.max(8, lastCol);
+  const numCols = Math.max(9, lastCol);
   const values = sh.getRange(2, 1, lastRow - 1, numCols).getValues();
   const tz = Session.getScriptTimeZone();
 
@@ -245,6 +246,7 @@ function getDadosMultas() {
       anexo: r[5] || '',
       valor: r[6] || 0,
       status: r[7] || 'Pendente',
+      dataLimite: r[8] ? Utilities.formatDate(new Date(r[8]), tz, 'dd/MM/yyyy') : '',
       rowIndex: i + 2
     });
   }
@@ -692,6 +694,8 @@ function adicionarMulta(dados) {
   if (!sh) return;
   const data = parseDateLocal(dados.data);
   const valor = dados.valor ? Number(dados.valor) : 0;
+  const dataLimite = dados.dataLimite ? parseDateLocal(dados.dataLimite) : '';
+  
   sh.appendRow([
     data,
     dados.veiculo,
@@ -700,7 +704,8 @@ function adicionarMulta(dados) {
     dados.auto,
     dados.anexo || '',
     valor,
-    'Pendente'
+    'Pendente',
+    dataLimite
   ]);
 }
 

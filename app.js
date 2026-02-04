@@ -317,6 +317,7 @@ function renderMultas() {
       <td>${m.anexo ? `<a href="${m.anexo}" target="_blank" class="link-anexo">Abrir</a>` : '-'}</td>
       <td>R$ ${formatNumber(m.valor)}</td>
       <td><span class="badge ${statusClass}">${m.status || 'Pendente'}</span></td>
+      <td>${m.dataLimite || '-'}</td>
       <td>
         <select class="btn-small btn-status" onchange="updateMultaStatus(${m.rowIndex}, this.value)">
           <option value="Pendente" ${m.status !== 'Pago' ? 'selected' : ''}>Pendente</option>
@@ -498,6 +499,7 @@ async function saveMulta() {
     tipo: document.getElementById('multa-tipo').value,
     auto: autoValor,
     valor: document.getElementById('multa-valor').value,
+    dataLimite: document.getElementById('multa-datalimite').value,
     anexo: '' // TODO: Upload de arquivo
   };
 
@@ -814,7 +816,8 @@ function parseMultaText(text) {
     data: '',
     auto: '',
     valor: '',
-    tipo: ''
+    tipo: '',
+    dataLimite: ''
   };
 
   // Normalizar texto
@@ -832,6 +835,13 @@ function parseMultaText(text) {
   if (dataMatch) {
     const partes = dataMatch[1].split('/');
     dados.data = `${partes[2]}-${partes[1]}-${partes[0]}`; // Formato YYYY-MM-DD
+  }
+
+  // Extrair DATA LIMITE PARA IDENTIFICAÇÃO DO CONDUTOR
+  const dataLimiteMatch = text.match(/(?:DATA\s*LIMITE\s*(?:PARA\s*)?IDENTIFICA[ÇC][AÃ]O(?:\s*DO\s*CONDUTOR)?|IDENTIFICA[ÇC][AÃ]O\s*AT[ÉE]).*?(\d{2}\/\d{2}\/\d{4})/is);
+  if (dataLimiteMatch) {
+    const partes = dataLimiteMatch[1].split('/');
+    dados.dataLimite = `${partes[2]}-${partes[1]}-${partes[0]}`;
   }
 
   // Extrair AUTO DE INFRAÇÃO (geralmente começa com letras e números)
@@ -923,6 +933,11 @@ function fillMultaForm(dados) {
   // Valor
   if (dados.valor) {
     document.getElementById('multa-valor').value = dados.valor;
+  }
+
+  // Data Limite Condutor
+  if (dados.dataLimite) {
+    document.getElementById('multa-datalimite').value = dados.dataLimite;
   }
 }
 
