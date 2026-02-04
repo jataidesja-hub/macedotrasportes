@@ -473,15 +473,30 @@ function renderConsumo() {
 // ===== SALVAR DADOS =====
 async function saveMulta() {
   const statusEl = document.getElementById('statusMulta');
+  const autoInput = document.getElementById('multa-auto');
+  const autoValor = autoInput.value.trim().toUpperCase();
+
+  // Verificar duplicidade
+  if (autoValor) {
+    const jaExiste = state.multas.some(m => m.auto.toUpperCase() === autoValor);
+    if (jaExiste) {
+      statusEl.textContent = 'ERRO: Esta multa já foi lançada!';
+      statusEl.className = 'status-msg status-error';
+      autoInput.classList.add('input-error');
+      return;
+    }
+  }
+
   statusEl.textContent = 'Salvando...';
   statusEl.className = 'status-msg status-saving';
+  autoInput.classList.remove('input-error');
 
   const data = {
     data: document.getElementById('multa-data').value,
     veiculo: document.getElementById('multa-veiculo').value,
     motorista: document.getElementById('multa-motorista').value,
     tipo: document.getElementById('multa-tipo').value,
-    auto: document.getElementById('multa-auto').value,
+    auto: autoValor,
     valor: document.getElementById('multa-valor').value,
     anexo: '' // TODO: Upload de arquivo
   };
@@ -752,6 +767,18 @@ async function extractOCRData() {
 
     // Parsear os dados do texto
     const dadosExtraidos = parseMultaText(fullText);
+
+    // Verificar se já existe esse auto no sistema
+    if (dadosExtraidos.auto) {
+      const jaExiste = state.multas.some(m => m.auto.toUpperCase() === dadosExtraidos.auto.toUpperCase());
+      if (jaExiste) {
+        statusEl.textContent = '⚠️ ATENÇÃO: Multa já cadastrada no sistema!';
+        statusEl.className = 'status-msg status-error';
+        fillMultaForm(dadosExtraidos);
+        btn.disabled = false;
+        return;
+      }
+    }
 
     // Preencher formulário
     fillMultaForm(dadosExtraidos);

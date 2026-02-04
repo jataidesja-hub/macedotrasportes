@@ -603,3 +603,8 @@ tr:last-child td {
   cursor: not-allowed;
   transform: none;
 }
+
+.input-error {
+  border-color: var(--danger-color) !important;
+  background-color: #fceae9 !important;
+}
