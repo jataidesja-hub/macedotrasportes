@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Macedo Transportes - Sistema de Gerenciamento de Frota</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <header>
+    <div class="header-content">
+      <img src="logo.png" alt="Macedo Transportes" class="logo" onerror="this.style.display='none'">
+      <div class="header-text">
+        <h1>Macedo Transportes</h1>
+        <p>Sistema de Gerenciamento de Frota</p>
+      </div>
+    </div>
+  </header>
+
+  <nav id="nav-tabs">
+    <button class="tab-btn ativo" data-tab="multas">Multas</button>
+    <button class="tab-btn" data-tab="abastecimentos">Abastecimentos</button>
+    <button class="tab-btn" data-tab="trocaoleo">Troca de Óleo</button>
+    <button class="tab-btn" data-tab="danos">Danos</button>
+    <button class="tab-btn" data-tab="motoristas">Motoristas</button>
+    <button class="tab-btn" data-tab="veiculos">Veículos</button>
+  </nav>
+
+  <!-- Filtros Globais -->
+  <div class="filtros-globais">
+    <label>
+      Filtrar por veículo (placa)
+      <select id="filtroVeiculoGlobal">
+        <option value="">Todos os veículos</option>
+      </select>
+    </label>
+    <label>
+      Filtrar por motorista
+      <select id="filtroMotoristaGlobal">
+        <option value="">Todos os motoristas</option>
+      </select>
+    </label>
+    <button id="btnAplicarFiltros">Aplicar filtros</button>
+    <button id="btnLimparFiltros">Limpar</button>
+  </div>
+
+  <div class="filtros-globais">
+    <span>Meses de referência (multas / abastecimentos / consumo)</span>
+    <label>
+      ---- de ----
+      <input type="month" id="filtroMesInicio">
+    </label>
+    <label>
+      até
+      <input type="month" id="filtroMesFim">
+    </label>
+    <button id="btnAplicarMeses">Aplicar meses</button>
+  </div>
+
+  <!-- Indicadores -->
+  <div class="indicadores-container" id="indicadores">
+    <div class="card-indicador">
+      <h3>Valor de multas no período</h3>
+      <div class="valor" id="indMultasValor">R$ 0,00</div>
+      <div class="sub" id="indMultasQtd">0 multas</div>
+    </div>
+    <div class="card-indicador">
+      <h3>Abastecimentos no período</h3>
+      <div class="valor" id="indAbastLitros">0 L</div>
+      <div class="sub" id="indAbastValor">R$ 0,00</div>
+    </div>
+    <div class="card-indicador">
+      <h3>Danos pendentes</h3>
+      <div class="valor" id="indDanosPendentes">0</div>
+      <div class="sub">Aguardando resolução</div>
+    </div>
+    <div class="card-indicador">
+      <h3>Veículos ativos</h3>
+      <div class="valor" id="indVeiculosAtivos">0</div>
+      <div class="sub">Frota ativa</div>
+    </div>
+  </div>
+
+  <main>
+    <!-- Seção Multas -->
+    <section id="sec-multas" class="secao">
+      <h2>Multas</h2>
+      <div class="form-grid">
+        <label>Data<input type="date" id="multa-data"></label>
+        <label>Veículo<select id="multa-veiculo"></select></label>
+        <label>Motorista<select id="multa-motorista"></select></label>
+        <label>Tipo de Multa<input type="text" id="multa-tipo"></label>
+        <label>Auto da infração<input type="text" id="multa-auto"></label>
+        <label>Anexo (PDF/Imagem)<input type="file" id="multa-anexo" accept="image/*,application/pdf"></label>
+        <label>Valor (R$)<input type="number" step="0.01" id="multa-valor"></label>
+      </div>
+      <div class="form-actions">
+        <button id="btnSalvarMulta">Salvar multa</button>
+        <span id="statusMulta" class="status-msg"></span>
+      </div>
+      <div class="table-container">
+        <table id="tabelaMultas">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Veículo</th>
+              <th>Motorista</th>
+              <th>Tipo de Multa</th>
+              <th>Auto da infração</th>
+              <th>Anexo</th>
+              <th>Valor (R$)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Seção Abastecimentos -->
+    <section id="sec-abastecimentos" class="secao" style="display:none">
+      <h2>Abastecimentos</h2>
+      <div class="form-grid">
+        <label>Data<input type="date" id="abast-data"></label>
+        <label>Veículo<select id="abast-veiculo"></select></label>
+        <label>Motorista<select id="abast-motorista"></select></label>
+        <label>Km atual<input type="number" id="abast-km"></label>
+        <label>Quantidade (litros)<input type="number" step="0.01" id="abast-litros"></label>
+        <label>Valor (R$)<input type="number" step="0.01" id="abast-valor"></label>
+      </div>
+      <div class="form-actions">
+        <button id="btnSalvarAbast">Salvar abastecimento</button>
+        <span id="statusAbast" class="status-msg"></span>
+      </div>
+      <div class="table-container">
+        <table id="tabelaAbastecimentos">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Veículo</th>
+              <th>Motorista</th>
+              <th>Km</th>
+              <th>Litros</th>
+              <th>Valor (R$)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      
+      <h3>Consumo Médio por Veículo (km/L)</h3>
+      <div class="table-container">
+        <table id="tabelaConsumo">
+          <thead>
+            <tr>
+              <th>Veículo</th>
+              <th>Km Rodado</th>
+              <th>Litros</th>
+              <th>Consumo (km/L)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Seção Troca de Óleo -->
+    <section id="sec-trocaoleo" class="secao" style="display:none">
+      <h2>Troca de Óleo</h2>
+      
+      <div id="alertasOleo" class="alert-box" style="display:none">
+        <h3>⚠️ Alertas de Troca de Óleo</h3>
+        <div id="alertasOleoConteudo"></div>
+      </div>
+      
+      <div class="form-grid">
+        <label>Data<input type="date" id="oleo-data"></label>
+        <label>Veículo<select id="oleo-veiculo"></select></label>
+        <label>Motorista<select id="oleo-motorista"></select></label>
+        <label>Km na Troca<input type="number" id="oleo-kmtroca"></label>
+        <label>Intervalo (Km)<input type="number" id="oleo-intervalo" value="10000"></label>
+        <label>Observações<input type="text" id="oleo-obs"></label>
+      </div>
+      <div class="form-actions">
+        <button id="btnSalvarOleo">Salvar troca</button>
+        <span id="statusOleo" class="status-msg"></span>
+      </div>
+      <div class="table-container">
+        <table id="tabelaOleo">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Veículo</th>
+              <th>Motorista</th>
+              <th>Km Troca</th>
+              <th>Intervalo</th>
+              <th>Próxima Troca</th>
+              <th>Observações</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Seção Danos -->
+    <section id="sec-danos" class="secao" style="display:none">
+      <h2>Danos</h2>
+      <div class="form-grid">
+        <label>Data<input type="date" id="dano-data"></label>
+        <label>Veículo<select id="dano-veiculo"></select></label>
+        <label>Motorista<select id="dano-motorista"></select></label>
+        <label>Descrição do dano<textarea id="dano-descricao"></textarea></label>
+        <label>Status
+          <select id="dano-status">
+            <option value="Pendente">Pendente</option>
+            <option value="Em reparo">Em reparo</option>
+            <option value="Resolvido">Resolvido</option>
+          </select>
+        </label>
+      </div>
+      <div class="form-actions">
+        <button id="btnSalvarDano">Salvar dano</button>
+        <span id="statusDano" class="status-msg"></span>
+      </div>
+      <div class="table-container">
+        <table id="tabelaDanos">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Veículo</th>
+              <th>Motorista</th>
+              <th>Descrição</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Seção Motoristas -->
+    <section id="sec-motoristas" class="secao" style="display:none">
+      <h2>Motoristas</h2>
+      <div class="form-grid">
+        <label>Nome<input type="text" id="mot-nome"></label>
+        <label>CPF<input type="text" id="mot-cpf"></label>
+        <label>CNH<input type="text" id="mot-cnh"></label>
+        <label>Categoria<input type="text" id="mot-categoria"></label>
+        <label>Validade CNH<input type="date" id="mot-validade"></label>
+        <label>Status
+          <select id="mot-status">
+            <option value="Ativo">Ativo</option>
+            <option value="Inativo">Inativo</option>
+          </select>
+        </label>
+      </div>
+      <div class="form-actions">
+        <button id="btnSalvarMotorista">Salvar motorista</button>
+        <span id="statusMotorista" class="status-msg"></span>
+      </div>
+      <div class="table-container">
+        <table id="tabelaMotoristas">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>CPF</th>
+              <th>CNH</th>
+              <th>Categoria</th>
+              <th>Validade</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Seção Veículos -->
+    <section id="sec-veiculos" class="secao" style="display:none">
+      <h2>Veículos</h2>
+      <div class="form-grid">
+        <label>Placa<input type="text" id="veic-placa"></label>
+        <label>Modelo<input type="text" id="veic-modelo"></label>
+        <label>Ano<input type="number" id="veic-ano"></label>
+        <label>Status
+          <select id="veic-status">
+            <option value="Ativo">Ativo</option>
+            <option value="Inativo">Inativo</option>
+            <option value="Manutenção">Manutenção</option>
+          </select>
+        </label>
+        <label>Anexo CRLV<input type="file" id="veic-crlv" accept="image/*,application/pdf"></label>
+      </div>
+      <div class="form-actions">
+        <button id="btnSalvarVeiculo">Salvar veículo</button>
+        <span id="statusVeiculo" class="status-msg"></span>
+      </div>
+      <div class="table-container">
+        <table id="tabelaVeiculos">
+          <thead>
+            <tr>
+              <th>Placa</th>
+              <th>Modelo</th>
+              <th>Ano</th>
+              <th>Status</th>
+              <th>CRLV</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="loading" class="loading-overlay" style="display:none">
+    <div class="loading-spinner"></div>
+    <p>Carregando...</p>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
