@@ -809,10 +809,12 @@ function parseMultaText(text) {
 
   // Extrair AUTO DE INFRAÇÃO (geralmente começa com letras e números)
   const autoMatches = [
+    textoNorm.match(/IDENTIFICA[ÇC][AÃ]O\s*DO\s*AUTO\s*DE\s*INFRA[ÇC][AÃ]O.*?([A-Z0-9]{8,})/is),
     textoNorm.match(/AUTO\s*(?:DE\s*)?(?:INFRA[ÇC][AÃ]O)?\s*(?:N[°º]?)?\s*:?\s*([A-Z0-9]{6,})/i),
     textoNorm.match(/N[°º]?\s*(?:DO\s*)?AIT\s*:?\s*([A-Z0-9]{6,})/i),
     textoNorm.match(/AIT\s*:?\s*([A-Z0-9]{6,})/i),
-    textoNorm.match(/IDENTIFICA[ÇC][AÃ]O\s*DO\s*AUTO[^A-Z0-9]*([A-Z0-9]{6,})/i)
+    textoNorm.match(/IDENTIFICA[ÇC][AÃ]O\s*DO\s*AUTO[^A-Z0-9]*([A-Z0-9]{6,})/i),
+    textoNorm.match(/\b([A-Z]{2}\d{8})\b/i) // Padrão específico MB00121928
   ];
 
   for (const match of autoMatches) {
