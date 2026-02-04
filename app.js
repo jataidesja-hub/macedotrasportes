@@ -8,6 +8,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyYaquZkyr0Ec0t7WGxnRPE
 
 // Estado da aplicação
 let state = {
+  veiculosLista: [],
   veiculos: [],
   motoristas: [],
   multas: [],
@@ -108,7 +109,7 @@ async function callApi(action, params = {}) {
   Object.keys(params).forEach(key => {
     url.searchParams.append(key, params[key]);
   });
-  
+
   try {
     const response = await fetch(url.toString());
     const data = await response.json();
@@ -122,7 +123,7 @@ async function callApi(action, params = {}) {
 async function postApi(action, data) {
   const url = new URL(API_URL);
   url.searchParams.append('action', action);
-  
+
   try {
     const response = await fetch(url.toString(), {
       method: 'POST',
@@ -142,7 +143,7 @@ async function postApi(action, data) {
 // ===== CARREGAR DADOS =====
 async function loadAllData() {
   showLoading();
-  
+
   try {
     // Usar iframe para contornar CORS do Apps Script
     await Promise.all([
@@ -158,7 +159,7 @@ async function loadAllData() {
   } catch (error) {
     console.error('Erro ao carregar dados:', error);
   }
-  
+
   hideLoading();
 }
 
@@ -178,14 +179,14 @@ function populateCombos() {
   state.veiculos.forEach(v => {
     filtroVeiculo.innerHTML += `<option value="${v}">${v}</option>`;
   });
-  
+
   // Motoristas - Filtro Global
   const filtroMotorista = document.getElementById('filtroMotoristaGlobal');
   filtroMotorista.innerHTML = '<option value="">Todos os motoristas</option>';
   state.motoristas.forEach(m => {
     filtroMotorista.innerHTML += `<option value="${m}">${m}</option>`;
   });
-  
+
   // Combos nos formulários
   const veiculoSelects = ['multa-veiculo', 'abast-veiculo', 'oleo-veiculo', 'dano-veiculo'];
   veiculoSelects.forEach(id => {
@@ -197,7 +198,7 @@ function populateCombos() {
       });
     }
   });
-  
+
   const motoristaSelects = ['multa-motorista', 'abast-motorista', 'oleo-motorista', 'dano-motorista'];
   motoristaSelects.forEach(id => {
     const select = document.getElementById(id);
@@ -244,7 +245,8 @@ async function loadMotoristas() {
 async function loadVeiculos() {
   const data = await callApi('getVeiculos');
   if (data) {
-    renderVeiculos(data);
+    state.veiculosLista = data;
+    renderVeiculos();
   }
 }
 
@@ -261,7 +263,7 @@ async function loadIndicadores() {
   const params = {};
   if (state.filtroMesInicio) params.mesInicio = state.filtroMesInicio;
   if (state.filtroMesFim) params.mesFim = state.filtroMesFim;
-  
+
   const data = await callApi('getIndicadores', params);
   if (data) {
     state.indicadores = data;
@@ -273,7 +275,7 @@ async function loadConsumo() {
   const params = {};
   if (state.filtroMesInicio) params.mesInicio = state.filtroMesInicio;
   if (state.filtroMesFim) params.mesFim = state.filtroMesFim;
-  
+
   const data = await callApi('getConsumo', params);
   if (data) {
     state.consumo = data;
@@ -286,6 +288,7 @@ function renderAllTables() {
   renderMultas();
   renderAbastecimentos();
   renderDanos();
+  renderVeiculos();
 }
 
 function filterData(data) {
@@ -299,8 +302,10 @@ function filterData(data) {
 function renderMultas() {
   const tbody = document.querySelector('#tabelaMultas tbody');
   const filtered = filterData(state.multas);
-  
-  tbody.innerHTML = filtered.map(m => `
+
+  tbody.innerHTML = filtered.map(m => {
+    const statusClass = m.status === 'Pago' ? 'badge-resolvido' : 'badge-pendente';
+    return `
     <tr>
       <td>${m.data}</td>
       <td>${m.veiculo}</td>
@@ -309,14 +314,22 @@ function renderMultas() {
       <td>${m.auto}</td>
       <td>${m.anexo ? `<a href="${m.anexo}" target="_blank" class="link-anexo">Abrir</a>` : '-'}</td>
       <td>R$ ${formatNumber(m.valor)}</td>
+      <td><span class="badge ${statusClass}">${m.status || 'Pendente'}</span></td>
+      <td>
+        <select class="btn-small btn-status" onchange="updateMultaStatus(${m.rowIndex}, this.value)">
+          <option value="Pendente" ${m.status !== 'Pago' ? 'selected' : ''}>Pendente</option>
+          <option value="Pago" ${m.status === 'Pago' ? 'selected' : ''}>Pago</option>
+        </select>
+      </td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function renderAbastecimentos() {
   const tbody = document.querySelector('#tabelaAbastecimentos tbody');
   const filtered = filterData(state.abastecimentos);
-  
+
   tbody.innerHTML = filtered.map(a => `
     <tr>
       <td>${a.data}</td>
@@ -332,7 +345,7 @@ function renderAbastecimentos() {
 function renderDanos() {
   const tbody = document.querySelector('#tabelaDanos tbody');
   const filtered = filterData(state.danos);
-  
+
   tbody.innerHTML = filtered.map(d => `
     <tr>
       <td>${d.data}</td>
@@ -353,7 +366,7 @@ function renderDanos() {
 
 function renderMotoristas(data) {
   const tbody = document.querySelector('#tabelaMotoristas tbody');
-  
+
   tbody.innerHTML = data.map(m => `
     <tr>
       <td>${m.nome}</td>
@@ -366,26 +379,36 @@ function renderMotoristas(data) {
   `).join('');
 }
 
-function renderVeiculos(data) {
+function renderVeiculos() {
   const tbody = document.querySelector('#tabelaVeiculos tbody');
-  
-  tbody.innerHTML = data.map(v => `
+  const data = state.veiculosLista || [];
+
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">Nenhum veículo cadastrado</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.map(v => {
+    const statusText = v.status || 'Ativo';
+    const statusClass = statusText.toLowerCase().replace(/ç/g, 'c').replace(/ã/g, 'a');
+    return `
     <tr>
-      <td>${v.placa}</td>
-      <td>${v.modelo}</td>
-      <td>${v.ano}</td>
-      <td><span class="badge badge-${v.status.toLowerCase()}">${v.status}</span></td>
+      <td>${v.placa || ''}</td>
+      <td>${v.modelo || ''}</td>
+      <td>${v.ano || ''}</td>
+      <td><span class="badge badge-${statusClass}">${statusText}</span></td>
       <td>${v.clrv ? `<a href="${v.clrv}" target="_blank" class="link-anexo">Ver CRLV</a>` : '-'}</td>
       <td>
         <button class="btn-small btn-edit" onclick="editVeiculo('${v.placa}')">Editar</button>
       </td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function renderTrocaOleo() {
   const tbody = document.querySelector('#tabelaOleo tbody');
-  
+
   tbody.innerHTML = state.trocasOleo.map(o => `
     <tr>
       <td>${o.data}</td>
@@ -402,12 +425,12 @@ function renderTrocaOleo() {
 function renderAlertasOleo(alertas) {
   const container = document.getElementById('alertasOleo');
   const conteudo = document.getElementById('alertasOleoConteudo');
-  
+
   if (alertas.length === 0) {
     container.style.display = 'none';
     return;
   }
-  
+
   container.style.display = 'block';
   conteudo.innerHTML = alertas.map(a => `
     <div class="alert-item">
@@ -421,20 +444,20 @@ function renderAlertasOleo(alertas) {
 
 function renderIndicadores() {
   const ind = state.indicadores;
-  
+
   document.getElementById('indMultasValor').textContent = `R$ ${formatNumber(ind.totalMultasMes || 0)}`;
   document.getElementById('indMultasQtd').textContent = `${ind.qtdMultasMes || 0} multas`;
-  
+
   document.getElementById('indAbastLitros').textContent = `${formatNumber(ind.totalLitrosMes || 0)} L`;
   document.getElementById('indAbastValor').textContent = `R$ ${formatNumber(ind.totalAbastecimentoMes || 0)}`;
-  
+
   document.getElementById('indDanosPendentes').textContent = ind.danosPendentes || 0;
   document.getElementById('indVeiculosAtivos').textContent = ind.veiculosAtivos || 0;
 }
 
 function renderConsumo() {
   const tbody = document.querySelector('#tabelaConsumo tbody');
-  
+
   tbody.innerHTML = state.consumo.map(c => `
     <tr>
       <td>${c.veiculo}</td>
@@ -450,7 +473,7 @@ async function saveMulta() {
   const statusEl = document.getElementById('statusMulta');
   statusEl.textContent = 'Salvando...';
   statusEl.className = 'status-msg status-saving';
-  
+
   const data = {
     data: document.getElementById('multa-data').value,
     veiculo: document.getElementById('multa-veiculo').value,
@@ -460,9 +483,9 @@ async function saveMulta() {
     valor: document.getElementById('multa-valor').value,
     anexo: '' // TODO: Upload de arquivo
   };
-  
+
   const result = await postApi('addMulta', data);
-  
+
   if (result) {
     statusEl.textContent = 'Salvo com sucesso!';
     statusEl.className = 'status-msg status-saved';
@@ -473,7 +496,7 @@ async function saveMulta() {
     statusEl.textContent = 'Erro ao salvar';
     statusEl.className = 'status-msg status-error';
   }
-  
+
   setTimeout(() => statusEl.textContent = '', 3000);
 }
 
@@ -481,7 +504,7 @@ async function saveAbastecimento() {
   const statusEl = document.getElementById('statusAbast');
   statusEl.textContent = 'Salvando...';
   statusEl.className = 'status-msg status-saving';
-  
+
   const data = {
     data: document.getElementById('abast-data').value,
     veiculo: document.getElementById('abast-veiculo').value,
@@ -490,9 +513,9 @@ async function saveAbastecimento() {
     litros: document.getElementById('abast-litros').value,
     valor: document.getElementById('abast-valor').value
   };
-  
+
   const result = await postApi('addAbastecimento', data);
-  
+
   if (result) {
     statusEl.textContent = 'Salvo com sucesso!';
     statusEl.className = 'status-msg status-saved';
@@ -504,7 +527,7 @@ async function saveAbastecimento() {
     statusEl.textContent = 'Erro ao salvar';
     statusEl.className = 'status-msg status-error';
   }
-  
+
   setTimeout(() => statusEl.textContent = '', 3000);
 }
 
@@ -512,7 +535,7 @@ async function saveTrocaOleo() {
   const statusEl = document.getElementById('statusOleo');
   statusEl.textContent = 'Salvando...';
   statusEl.className = 'status-msg status-saving';
-  
+
   const data = {
     data: document.getElementById('oleo-data').value,
     veiculo: document.getElementById('oleo-veiculo').value,
@@ -521,9 +544,9 @@ async function saveTrocaOleo() {
     intervalo: document.getElementById('oleo-intervalo').value,
     obs: document.getElementById('oleo-obs').value
   };
-  
+
   const result = await postApi('addTrocaOleo', data);
-  
+
   if (result) {
     statusEl.textContent = 'Salvo com sucesso!';
     statusEl.className = 'status-msg status-saved';
@@ -533,7 +556,7 @@ async function saveTrocaOleo() {
     statusEl.textContent = 'Erro ao salvar';
     statusEl.className = 'status-msg status-error';
   }
-  
+
   setTimeout(() => statusEl.textContent = '', 3000);
 }
 
@@ -541,7 +564,7 @@ async function saveDano() {
   const statusEl = document.getElementById('statusDano');
   statusEl.textContent = 'Salvando...';
   statusEl.className = 'status-msg status-saving';
-  
+
   const data = {
     data: document.getElementById('dano-data').value,
     veiculo: document.getElementById('dano-veiculo').value,
@@ -549,9 +572,9 @@ async function saveDano() {
     descricao: document.getElementById('dano-descricao').value,
     status: document.getElementById('dano-status').value
   };
-  
+
   const result = await postApi('addDano', data);
-  
+
   if (result) {
     statusEl.textContent = 'Salvo com sucesso!';
     statusEl.className = 'status-msg status-saved';
@@ -562,7 +585,7 @@ async function saveDano() {
     statusEl.textContent = 'Erro ao salvar';
     statusEl.className = 'status-msg status-error';
   }
-  
+
   setTimeout(() => statusEl.textContent = '', 3000);
 }
 
@@ -570,7 +593,7 @@ async function saveMotorista() {
   const statusEl = document.getElementById('statusMotorista');
   statusEl.textContent = 'Salvando...';
   statusEl.className = 'status-msg status-saving';
-  
+
   const data = {
     nome: document.getElementById('mot-nome').value,
     cpf: document.getElementById('mot-cpf').value,
@@ -579,9 +602,9 @@ async function saveMotorista() {
     validade: document.getElementById('mot-validade').value,
     status: document.getElementById('mot-status').value
   };
-  
+
   const result = await postApi('addMotorista', data);
-  
+
   if (result) {
     statusEl.textContent = 'Salvo com sucesso!';
     statusEl.className = 'status-msg status-saved';
@@ -592,7 +615,7 @@ async function saveMotorista() {
     statusEl.textContent = 'Erro ao salvar';
     statusEl.className = 'status-msg status-error';
   }
-  
+
   setTimeout(() => statusEl.textContent = '', 3000);
 }
 
@@ -600,7 +623,7 @@ async function saveVeiculo() {
   const statusEl = document.getElementById('statusVeiculo');
   statusEl.textContent = 'Salvando...';
   statusEl.className = 'status-msg status-saving';
-  
+
   const data = {
     placa: document.getElementById('veic-placa').value,
     modelo: document.getElementById('veic-modelo').value,
@@ -608,9 +631,9 @@ async function saveVeiculo() {
     status: document.getElementById('veic-status').value,
     clrv: '' // TODO: Upload de arquivo
   };
-  
+
   const result = await postApi('addVeiculo', data);
-  
+
   if (result) {
     statusEl.textContent = 'Salvo com sucesso!';
     statusEl.className = 'status-msg status-saved';
@@ -621,11 +644,17 @@ async function saveVeiculo() {
     statusEl.textContent = 'Erro ao salvar';
     statusEl.className = 'status-msg status-error';
   }
-  
+
   setTimeout(() => statusEl.textContent = '', 3000);
 }
 
 // ===== AÇÕES =====
+async function updateMultaStatus(rowIndex, novoStatus) {
+  await postApi('updateMultaStatus', { rowIndex, novoStatus });
+  loadMultas();
+  loadIndicadores();
+}
+
 async function updateDanoStatus(rowIndex, novoStatus) {
   await postApi('updateDanoStatus', { rowIndex, novoStatus });
   loadDanos();

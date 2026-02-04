@@ -104,6 +104,10 @@ function doPost(e) {
       atualizarStatusDano(dados.rowIndex, dados.novoStatus);
       result.success = true;
       break;
+    case 'updateMultaStatus':
+      atualizarStatusMulta(dados.rowIndex, dados.novoStatus);
+      result.success = true;
+      break;
     case 'updateVeiculoStatus':
       atualizarStatusVeiculo(dados.rowIndex, dados.novoStatus);
       result.success = true;
@@ -135,9 +139,9 @@ function criarPlanilha() {
     multasSheet = ss.insertSheet('Multas');
   }
   multasSheet.clear();
-  multasSheet.getRange(1, 1, 1, 7).setValues([[
+  multasSheet.getRange(1, 1, 1, 8).setValues([[
     'Data', 'Veículo', 'Motorista', 'Tipo de Multa',
-    'Auto da infração', 'Anexo (link)', 'Valor'
+    'Auto da infração', 'Anexo (link)', 'Valor', 'Status'
   ]]).setFontWeight('bold');
   multasSheet.setFrozenRows(1);
   multasSheet.getRange('A:A').setNumberFormat('dd/MM/yyyy');
@@ -224,18 +228,27 @@ function getDadosMultas() {
   if (!sh) return [];
   const lastRow = sh.getLastRow();
   if (lastRow < 2) return [];
-  const values = sh.getRange(2, 1, lastRow - 1, 7).getValues();
+  const lastCol = sh.getLastColumn();
+  const numCols = Math.max(8, lastCol);
+  const values = sh.getRange(2, 1, lastRow - 1, numCols).getValues();
   const tz = Session.getScriptTimeZone();
 
-  return values.map(r => ({
-    data: r[0] ? Utilities.formatDate(new Date(r[0]), tz, 'dd/MM/yyyy') : '',
-    veiculo: r[1] || '',
-    motorista: r[2] || '',
-    tipo: r[3] || '',
-    auto: r[4] || '',
-    anexo: r[5] || '',
-    valor: r[6] || 0
-  }));
+  const resultado = [];
+  for (let i = 0; i < values.length; i++) {
+    const r = values[i];
+    resultado.push({
+      data: r[0] ? Utilities.formatDate(new Date(r[0]), tz, 'dd/MM/yyyy') : '',
+      veiculo: r[1] || '',
+      motorista: r[2] || '',
+      tipo: r[3] || '',
+      auto: r[4] || '',
+      anexo: r[5] || '',
+      valor: r[6] || 0,
+      status: r[7] || 'Pendente',
+      rowIndex: i + 2
+    });
+  }
+  return resultado;
 }
 
 function getDadosAbastecimentos() {
@@ -686,7 +699,8 @@ function adicionarMulta(dados) {
     dados.tipo,
     dados.auto,
     dados.anexo || '',
-    valor
+    valor,
+    'Pendente'
   ]);
 }
 
@@ -786,6 +800,12 @@ function atualizarStatusDano(rowIndex, novoStatus) {
   const sh = SpreadsheetApp.getActive().getSheetByName('Danos');
   if (!sh || !rowIndex) return;
   sh.getRange(rowIndex, 5).setValue(novoStatus);
+}
+
+function atualizarStatusMulta(rowIndex, novoStatus) {
+  const sh = SpreadsheetApp.getActive().getSheetByName('Multas');
+  if (!sh || !rowIndex) return;
+  sh.getRange(rowIndex, 8).setValue(novoStatus);
 }
 
 function atualizarStatusVeiculo(rowIndex, novoStatus) {

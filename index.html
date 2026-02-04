@@ -111,6 +111,8 @@
               <th>Auto da infração</th>
               <th>Anexo</th>
               <th>Valor (R$)</th>
+              <th>Status</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -148,7 +150,7 @@
           <tbody></tbody>
         </table>
       </div>
-      
+
       <h3>Consumo Médio por Veículo (km/L)</h3>
       <div class="table-container">
         <table id="tabelaConsumo">
@@ -168,12 +170,12 @@
     <!-- Seção Troca de Óleo -->
     <section id="sec-trocaoleo" class="secao" style="display:none">
       <h2>Troca de Óleo</h2>
-      
+
       <div id="alertasOleo" class="alert-box" style="display:none">
         <h3>⚠️ Alertas de Troca de Óleo</h3>
         <div id="alertasOleoConteudo"></div>
       </div>
-      
+
       <div class="form-grid">
         <label>Data<input type="date" id="oleo-data"></label>
         <label>Veículo<select id="oleo-veiculo"></select></label>
@@ -323,4 +325,5 @@
 
   <script src="app.js"></script>
 </body>
+
 </html>
