@@ -29,34 +29,50 @@
   </nav>
 
   <!-- Filtros Globais -->
-  <div class="filtros-globais">
-    <label>
-      Filtrar por veículo (placa)
-      <select id="filtroVeiculoGlobal">
-        <option value="">Todos os veículos</option>
-      </select>
-    </label>
-    <label>
-      Filtrar por motorista
-      <select id="filtroMotoristaGlobal">
-        <option value="">Todos os motoristas</option>
-      </select>
-    </label>
-    <button id="btnAplicarFiltros">Aplicar filtros</button>
-    <button id="btnLimparFiltros">Limpar</button>
-  </div>
-
-  <div class="filtros-globais">
-    <span>Meses de referência (multas / abastecimentos / consumo)</span>
-    <label>
-      ---- de ----
-      <input type="month" id="filtroMesInicio">
-    </label>
-    <label>
-      até
-      <input type="month" id="filtroMesFim">
-    </label>
-    <button id="btnAplicarMeses">Aplicar meses</button>
+  <!-- Filtros Globais -->
+  <div class="filtros-container">
+    <h3>🔍 Filtros de Busca</h3>
+    <div class="filtros-grid">
+      <label>
+        Veículo
+        <select id="filtroVeiculoGlobal">
+          <option value="">Todos os veículos</option>
+        </select>
+      </label>
+      <label>
+        Motorista
+        <select id="filtroMotoristaGlobal">
+          <option value="">Todos os motoristas</option>
+        </select>
+      </label>
+      <label>
+        Status (Multas/Danos)
+        <select id="filtroStatusGlobal">
+          <option value="">Todos</option>
+          <option value="Pendente">Pendente</option>
+          <option value="Pago">Pago / Resolvido</option>
+          <option value="Em reparo">Em reparo</option>
+        </select>
+      </label>
+      <label>
+        Buscar (Auto / Tipo)
+        <input type="text" id="filtroBuscaGlobal" placeholder="Digite para buscar...">
+      </label>
+    </div>
+    <div class="filtros-meses">
+      <label>
+        Período de:
+        <input type="month" id="filtroMesInicio">
+      </label>
+      <label>
+        até:
+        <input type="month" id="filtroMesFim">
+      </label>
+      <div class="filter-actions">
+        <button id="btnAplicarFiltros" class="btn-primary">🚀 Aplicar Todos os Filtros</button>
+        <button id="btnLimparFiltros" class="btn-secondary">🧹 Limpar</button>
+      </div>
+    </div>
   </div>
 
   <!-- Indicadores -->

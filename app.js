@@ -19,6 +19,8 @@ let state = {
   indicadores: {},
   filtroVeiculo: '',
   filtroMotorista: '',
+  filtroStatus: '',
+  filtroBusca: '',
   filtroMesInicio: '',
   filtroMesFim: ''
 };
@@ -53,26 +55,37 @@ function initTabs() {
 function initFilters() {
   document.getElementById('btnAplicarFiltros').addEventListener('click', applyFilters);
   document.getElementById('btnLimparFiltros').addEventListener('click', clearFilters);
-  document.getElementById('btnAplicarMeses').addEventListener('click', applyMonthFilter);
 }
 
 function applyFilters() {
   state.filtroVeiculo = document.getElementById('filtroVeiculoGlobal').value;
   state.filtroMotorista = document.getElementById('filtroMotoristaGlobal').value;
+  state.filtroStatus = document.getElementById('filtroStatusGlobal').value;
+  state.filtroBusca = document.getElementById('filtroBuscaGlobal').value.toLowerCase();
+  state.filtroMesInicio = document.getElementById('filtroMesInicio').value;
+  state.filtroMesFim = document.getElementById('filtroMesFim').value;
+
   renderAllTables();
+  loadIndicadores();
+  loadConsumo();
 }
 
 function clearFilters() {
   document.getElementById('filtroVeiculoGlobal').value = '';
   document.getElementById('filtroMotoristaGlobal').value = '';
+  document.getElementById('filtroStatusGlobal').value = '';
+  document.getElementById('filtroBuscaGlobal').value = '';
+  document.getElementById('filtroMesInicio').value = '';
+  document.getElementById('filtroMesFim').value = '';
+
   state.filtroVeiculo = '';
   state.filtroMotorista = '';
-  renderAllTables();
-}
+  state.filtroStatus = '';
+  state.filtroBusca = '';
+  state.filtroMesInicio = '';
+  state.filtroMesFim = '';
 
-function applyMonthFilter() {
-  state.filtroMesInicio = document.getElementById('filtroMesInicio').value;
-  state.filtroMesFim = document.getElementById('filtroMesFim').value;
+  renderAllTables();
   loadIndicadores();
   loadConsumo();
 }
@@ -295,8 +308,50 @@ function renderAllTables() {
 
 function filterData(data) {
   return data.filter(item => {
+    // 1. Filtro de Veículo
     if (state.filtroVeiculo && item.veiculo !== state.filtroVeiculo) return false;
+
+    // 2. Filtro de Motorista
     if (state.filtroMotorista && item.motorista !== state.filtroMotorista) return false;
+
+    // 3. Filtro de Status
+    if (state.filtroStatus) {
+      const statusItem = (item.status || '').toLowerCase();
+      const statusFiltro = state.filtroStatus.toLowerCase();
+
+      if (statusFiltro === 'pago') {
+        if (statusItem !== 'pago' && statusItem !== 'resolvido') return false;
+      } else if (statusItem !== statusFiltro) {
+        return false;
+      }
+    }
+
+    // 4. Filtro de Período (Mês/Ano)
+    if (item.data && (state.filtroMesInicio || state.filtroMesFim)) {
+      // Assumindo data no formato DD/MM/YYYY
+      const partes = item.data.split('/');
+      if (partes.length === 3) {
+        const dataItemStr = `${partes[2]}-${partes[1]}`; // YYYY-MM
+
+        if (state.filtroMesInicio && dataItemStr < state.filtroMesInicio) return false;
+        if (state.filtroMesFim && dataItemStr > state.filtroMesFim) return false;
+      }
+    }
+
+    // 5. Busca Global (Auto, Tipo, Descrição)
+    if (state.filtroBusca) {
+      const busca = state.filtroBusca;
+      const conteudo = [
+        item.auto || '',
+        item.tipo || '',
+        item.descricao || '',
+        item.veiculo || '',
+        item.motorista || ''
+      ].join(' ').toLowerCase();
+
+      if (!conteudo.includes(busca)) return false;
+    }
+
     return true;
   });
 }
