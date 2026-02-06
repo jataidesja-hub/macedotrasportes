@@ -8,7 +8,6 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#145a32">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -111,22 +110,20 @@
 
       <div class="dashboard-grid">
         <div class="chart-card">
-          <h3>Top 5 - Veículos que mais abasteceram (L)</h3>
-          <canvas id="chartMaisAbastecidos"></canvas>
+          <h3>🏆 Top 5 - Mais Abastecidos (L)</h3>
+          <ul id="listMaisAbastecidos" class="rank-list"></ul>
         </div>
         <div class="chart-card">
-          <h3>Top 5 - Melhores Médias (km/L)</h3>
-          <canvas id="chartMelhoresMedias"></canvas>
+          <h3>✨ Top 5 - Melhores Médias (km/L)</h3>
+          <ul id="listMelhoresMedias" class="rank-list"></ul>
         </div>
         <div class="chart-card">
-          <h3>Faturamento vs Multas (Mensal)</h3>
-          <canvas id="chartMultasMensal"></canvas>
+          <h3>📉 Histórico de Multas (Mensal)</h3>
+          <ul id="listMultasMensal" class="rank-list"></ul>
         </div>
         <div class="chart-card">
-          <h3>Resumo de Gastos (R$)</h3>
-          <ul id="resumoGastos" class="rank-list">
-            <!-- Populado via JS -->
-          </ul>
+          <h3>💰 Resumo Geral de Gastos</h3>
+          <ul id="resumoGastos" class="rank-list"></ul>
         </div>
       </div>
     </section>

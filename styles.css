@@ -668,13 +668,8 @@ tr:last-child td {
   padding: 15px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   border: 1px solid var(--border-color);
-  max-height: 350px;
   display: flex;
   flex-direction: column;
-}
-
-.chart-card canvas {
-  max-height: 250px !important;
 }
 
 .chart-card h3 {

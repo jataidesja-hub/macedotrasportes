@@ -585,7 +585,7 @@ function renderConsumo() {
   `).join('');
 }
 
-// Global charts instances
+// Global charts instances - REMOVIDO PARA PERFORMANCE
 let charts = {};
 
 function renderDashboard() {
@@ -593,7 +593,7 @@ function renderDashboard() {
   const dataAbast = filterData(state.abastecimentos);
   const dataConsumo = state.consumo;
 
-  // 1. Top 5 Abastecimentos (L) - Agrupado por Veículo
+  // 1. Top 5 Abastecimentos (L)
   const rankingAbast = {};
   dataAbast.forEach(a => {
     rankingAbast[a.veiculo] = (rankingAbast[a.veiculo] || 0) + Number(a.litros || 0);
@@ -602,33 +602,31 @@ function renderDashboard() {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
 
-  renderChart('chartMaisAbastecidos', 'bar', {
-    labels: topAbast.map(i => i[0]),
-    datasets: [{
-      label: 'Litros',
-      data: topAbast.map(i => i[1]),
-      backgroundColor: '#27ae60',
-      borderRadius: 5
-    }]
-  });
+  document.getElementById('listMaisAbastecidos').innerHTML = topAbast.length > 0
+    ? topAbast.map((i, idx) => `
+      <li class="rank-item">
+        <span class="label">${idx + 1}. ${i[0]}</span>
+        <span class="value">${formatNumber(i[1])} L</span>
+      </li>
+    `).join('')
+    : '<li class="rank-item">Sem dados no período</li>';
 
-  // 2. Melhores Médias (km/L)
+  // 2. Melhores Médias
   const melhoresMedias = [...dataConsumo]
     .filter(c => c.consumo > 0)
     .sort((a, b) => b.consumo - a.consumo)
     .slice(0, 5);
 
-  renderChart('chartMelhoresMedias', 'bar', {
-    labels: melhoresMedias.map(m => m.veiculo),
-    datasets: [{
-      label: 'km/L',
-      data: melhoresMedias.map(m => m.consumo),
-      backgroundColor: '#3498db',
-      borderRadius: 5
-    }]
-  });
+  document.getElementById('listMelhoresMedias').innerHTML = melhoresMedias.length > 0
+    ? melhoresMedias.map((m, idx) => `
+      <li class="rank-item">
+        <span class="label">${idx + 1}. ${m.veiculo}</span>
+        <span class="value">${formatNumber(m.consumo)} km/L</span>
+      </li>
+    `).join('')
+    : '<li class="rank-item">Sem dados no período</li>';
 
-  // 3. Multas Mensais (Evolução)
+  // 3. Multas Mensais (Lista simples)
   const mesesMultas = {};
   dataMultas.forEach(m => {
     if (!m.data) return;
@@ -641,30 +639,20 @@ function renderDashboard() {
   const labelsMeses = Object.keys(mesesMultas).sort((a, b) => {
     const [m1, y1] = a.split('/');
     const [m2, y2] = b.split('/');
-    return new Date(y1, m1 - 1) - new Date(y2, m2 - 1);
-  });
+    return new Date(y2, m2 - 1) - new Date(y1, m1 - 1); // Mais recente primeiro
+  }).slice(0, 5);
 
-  renderChart('chartMultasMensal', 'line', {
-    labels: labelsMeses,
-    datasets: [
-      {
-        label: 'Pendentes (R$)',
-        data: labelsMeses.map(l => mesesMultas[l].Pendente),
-        borderColor: '#e74c3c',
-        backgroundColor: 'rgba(231, 76, 60, 0.1)',
-        fill: true,
-        tension: 0.3
-      },
-      {
-        label: 'Pagos (R$)',
-        data: labelsMeses.map(l => mesesMultas[l].Pago),
-        borderColor: '#2ecc71',
-        backgroundColor: 'rgba(46, 204, 113, 0.1)',
-        fill: true,
-        tension: 0.3
-      }
-    ]
-  });
+  document.getElementById('listMultasMensal').innerHTML = labelsMeses.length > 0
+    ? labelsMeses.map(l => `
+      <li class="rank-item">
+        <span class="label">${l}</span>
+        <span class="value">
+          <span style="color:#e74c3c">P: R$ ${formatNumber(mesesMultas[l].Pendente)}</span> | 
+          <span style="color:#2ecc71">Q: R$ ${formatNumber(mesesMultas[l].Pago)}</span>
+        </span>
+      </li>
+    `).join('')
+    : '<li class="rank-item">Sem multas no período</li>';
 
   // 4. Resumo de Gastos
   const totalLitros = dataAbast.reduce((sum, a) => sum + Number(a.litros || 0), 0);
@@ -673,35 +661,17 @@ function renderDashboard() {
 
   const resumoHtml = `
     <li class="rank-item"><span class="label">Total Litros:</span> <span class="value">${formatNumber(totalLitros)} L</span></li>
-    <li class="rank-item"><span class="label">Investimento Abastecimento:</span> <span class="value">R$ ${formatNumber(totalAbastVal)}</span></li>
-    <li class="rank-item"><span class="label">Total em Multas:</span> <span class="value">R$ ${formatNumber(totalMultasVal)}</span></li>
-    <li class="rank-item"><span class="label">Custo Médio p/ Litro:</span> <span class="value">R$ ${totalLitros > 0 ? formatNumber(totalAbastVal / totalLitros) : '0,00'}</span></li>
+    <li class="rank-item"><span class="label">Abastecimento:</span> <span class="value">R$ ${formatNumber(totalAbastVal)}</span></li>
+    <li class="rank-item"><span class="label">Total Multas:</span> <span class="value">R$ ${formatNumber(totalMultasVal)}</span></li>
+    <li class="rank-item"><span class="label">Média R$/L:</span> <span class="value">R$ ${totalLitros > 0 ? formatNumber(totalAbastVal / totalLitros) : '0,00'}</span></li>
   `;
   const resumoEl = document.getElementById('resumoGastos');
   if (resumoEl) resumoEl.innerHTML = resumoHtml;
 }
 
+// Removendo função de chart para economizar memória
 function renderChart(id, type, data) {
-  const ctx = document.getElementById(id);
-  if (!ctx) return;
-
-  if (charts[id]) charts[id].destroy();
-
-  charts[id] = new Chart(ctx, {
-    type: type,
-    data: data,
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      aspectRatio: 2,
-      plugins: {
-        legend: { position: 'bottom' }
-      },
-      scales: type === 'bar' ? {
-        y: { beginAtZero: true }
-      } : {}
-    }
-  });
+  console.log('Graficos desativados para melhor performance.');
 }
 
 // ===== SALVAR DADOS =====
