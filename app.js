@@ -21,8 +21,8 @@ let state = {
   filtroMotorista: '',
   filtroStatus: '',
   filtroBusca: '',
-  filtroMesInicio: '',
-  filtroMesFim: ''
+  filtroMesFim: '',
+  activeTab: 'dashboard'
 };
 
 // ===== INICIALIZAÇÃO =====
@@ -46,8 +46,13 @@ function initTabs() {
       // Esconde todas as seções
       document.querySelectorAll('.secao').forEach(s => s.style.display = 'none');
       // Mostra seção correspondente
+      state.activeTab = tab.dataset.tab;
       const secao = document.getElementById('sec-' + tab.dataset.tab);
       if (secao) secao.style.display = 'block';
+
+      if (state.activeTab === 'dashboard') {
+        renderDashboard();
+      }
     });
   });
 }
@@ -65,6 +70,10 @@ function applyFilters() {
   state.filtroBusca = document.getElementById('filtroBuscaGlobal').value.toLowerCase();
   state.filtroMesInicio = document.getElementById('filtroMesInicio').value;
   state.filtroMesFim = document.getElementById('filtroMesFim').value;
+
+  if (state.activeTab === 'dashboard') {
+    loadDashboardData();
+  }
 
   renderAllTables();
   loadIndicadores();
@@ -172,6 +181,11 @@ async function loadAllData() {
       loadTrocaOleo(),
       loadIndicadores()
     ]);
+
+    // Se estiver na aba dashboard, renderizar
+    if (state.activeTab === 'dashboard') {
+      renderDashboard();
+    }
   } catch (error) {
     console.error('Erro ao carregar dados:', error);
   }
@@ -239,6 +253,7 @@ async function loadMultas() {
   if (data) {
     state.multas = data;
     renderMultas();
+    if (state.activeTab === 'dashboard') renderDashboard();
   }
 }
 
@@ -247,6 +262,7 @@ async function loadAbastecimentos() {
   if (data) {
     state.abastecimentos = data;
     renderAbastecimentos();
+    if (state.activeTab === 'dashboard') renderDashboard();
   }
 }
 
@@ -303,7 +319,17 @@ async function loadConsumo() {
   if (data) {
     state.consumo = data;
     renderConsumo();
+    if (state.activeTab === 'dashboard') renderDashboard();
   }
+}
+
+// Função para carregar dados específicos do dashboard
+async function loadDashboardData() {
+  await Promise.all([
+    loadIndicadores(),
+    loadConsumo()
+  ]);
+  renderDashboard();
 }
 
 // ===== RENDERIZAÇÃO =====
@@ -557,6 +583,124 @@ function renderConsumo() {
       <td>${formatNumber(c.consumo)} km/L</td>
     </tr>
   `).join('');
+}
+
+// Global charts instances
+let charts = {};
+
+function renderDashboard() {
+  const dataMultas = filterData(state.multas);
+  const dataAbast = filterData(state.abastecimentos);
+  const dataConsumo = state.consumo;
+
+  // 1. Top 5 Abastecimentos (L) - Agrupado por Veículo
+  const rankingAbast = {};
+  dataAbast.forEach(a => {
+    rankingAbast[a.veiculo] = (rankingAbast[a.veiculo] || 0) + Number(a.litros || 0);
+  });
+  const topAbast = Object.entries(rankingAbast)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  renderChart('chartMaisAbastecidos', 'bar', {
+    labels: topAbast.map(i => i[0]),
+    datasets: [{
+      label: 'Litros',
+      data: topAbast.map(i => i[1]),
+      backgroundColor: '#27ae60',
+      borderRadius: 5
+    }]
+  });
+
+  // 2. Melhores Médias (km/L)
+  const melhoresMedias = [...dataConsumo]
+    .filter(c => c.consumo > 0)
+    .sort((a, b) => b.consumo - a.consumo)
+    .slice(0, 5);
+
+  renderChart('chartMelhoresMedias', 'bar', {
+    labels: melhoresMedias.map(m => m.veiculo),
+    datasets: [{
+      label: 'km/L',
+      data: melhoresMedias.map(m => m.consumo),
+      backgroundColor: '#3498db',
+      borderRadius: 5
+    }]
+  });
+
+  // 3. Multas Mensais (Evolução)
+  const mesesMultas = {};
+  dataMultas.forEach(m => {
+    if (!m.data) return;
+    const partes = m.data.split('/');
+    const mes = partes[1] + '/' + partes[2];
+    if (!mesesMultas[mes]) mesesMultas[mes] = { Pago: 0, Pendente: 0 };
+    mesesMultas[mes][m.status === 'Pago' ? 'Pago' : 'Pendente'] += Number(m.valor || 0);
+  });
+
+  const labelsMeses = Object.keys(mesesMultas).sort((a, b) => {
+    const [m1, y1] = a.split('/');
+    const [m2, y2] = b.split('/');
+    return new Date(y1, m1 - 1) - new Date(y2, m2 - 1);
+  });
+
+  renderChart('chartMultasMensal', 'line', {
+    labels: labelsMeses,
+    datasets: [
+      {
+        label: 'Pendentes (R$)',
+        data: labelsMeses.map(l => mesesMultas[l].Pendente),
+        borderColor: '#e74c3c',
+        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+        fill: true,
+        tension: 0.3
+      },
+      {
+        label: 'Pagos (R$)',
+        data: labelsMeses.map(l => mesesMultas[l].Pago),
+        borderColor: '#2ecc71',
+        backgroundColor: 'rgba(46, 204, 113, 0.1)',
+        fill: true,
+        tension: 0.3
+      }
+    ]
+  });
+
+  // 4. Resumo de Gastos
+  const totalLitros = dataAbast.reduce((sum, a) => sum + Number(a.litros || 0), 0);
+  const totalAbastVal = dataAbast.reduce((sum, a) => sum + Number(a.valor || 0), 0);
+  const totalMultasVal = dataMultas.reduce((sum, m) => sum + Number(m.valor || 0), 0);
+
+  const resumoHtml = `
+    <li class="rank-item"><span class="label">Total Litros:</span> <span class="value">${formatNumber(totalLitros)} L</span></li>
+    <li class="rank-item"><span class="label">Investimento Abastecimento:</span> <span class="value">R$ ${formatNumber(totalAbastVal)}</span></li>
+    <li class="rank-item"><span class="label">Total em Multas:</span> <span class="value">R$ ${formatNumber(totalMultasVal)}</span></li>
+    <li class="rank-item"><span class="label">Custo Médio p/ Litro:</span> <span class="value">R$ ${totalLitros > 0 ? formatNumber(totalAbastVal / totalLitros) : '0,00'}</span></li>
+  `;
+  const resumoEl = document.getElementById('resumoGastos');
+  if (resumoEl) resumoEl.innerHTML = resumoHtml;
+}
+
+function renderChart(id, type, data) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+
+  if (charts[id]) charts[id].destroy();
+
+  charts[id] = new Chart(ctx, {
+    type: type,
+    data: data,
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom' }
+      },
+      scales: type === 'bar' ? {
+        y: { beginAtZero: true }
+      } : {}
+    }
+  });
 }
 
 // ===== SALVAR DADOS =====
@@ -825,51 +969,7 @@ async function extractOCRData() {
     return;
   }
 
-  // ===== PWA - INSTALAÇÃO E SERVICE WORKER =====
-  let deferredPrompt;
-
-  function initPWA() {
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('SW registrado!', reg))
-          .catch(err => console.log('Erro SW:', err));
-      });
-    }
-
-    const btnInstall = document.getElementById('btnAppInstall');
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-      // Previne que o Chrome 67 ou anterior mostre o prompt automaticamente
-      e.preventDefault();
-      // Guarda o evento para ser disparado depois
-      deferredPrompt = e;
-      // Mostra o botão de instalação
-      if (btnInstall) {
-        btnInstall.style.display = 'flex';
-      }
-    });
-
-    if (btnInstall) {
-      btnInstall.addEventListener('click', async () => {
-        if (!deferredPrompt) return;
-        // Mostra o prompt
-        deferredPrompt.prompt();
-        // Aguarda a resposta do usuário
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log(`Usuário escolheu: ${outcome}`);
-        // Limpa o prompt
-        deferredPrompt = null;
-        // Esconde o botão
-        btnInstall.style.display = 'none';
-      });
-    }
-
-    window.addEventListener('appinstalled', (evt) => {
-      console.log('App instalado com sucesso!');
-      if (btnInstall) btnInstall.style.display = 'none';
-    });
-  }
+  const file = fileInput.files[0];
 
   // Verificar tipo de arquivo
   if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
@@ -1090,5 +1190,55 @@ function fillMultaForm(dados) {
   if (dados.dataLimite) {
     document.getElementById('multa-datalimite').value = dados.dataLimite;
   }
+}
+
+// ===== PWA - INSTALAÇÃO E SERVICE WORKER =====
+let deferredPrompt;
+
+function initPWA() {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('SW registrado!', reg))
+        .catch(err => console.log('Erro SW:', err));
+    });
+  }
+
+  const btnInstall = document.getElementById('btnPWAInstallNow');
+  const btnClose = document.getElementById('btnPWACloseBanner');
+  const banner = document.getElementById('pwa-install-banner');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (!sessionStorage.getItem('pwa-banner-closed')) {
+      if (banner) {
+        banner.style.display = 'flex';
+      }
+    }
+  });
+
+  if (btnInstall) {
+    btnInstall.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`Usuário escolheu: ${outcome}`);
+      deferredPrompt = null;
+      if (banner) banner.style.display = 'none';
+    });
+  }
+
+  if (btnClose) {
+    btnClose.addEventListener('click', () => {
+      if (banner) banner.style.display = 'none';
+      sessionStorage.setItem('pwa-banner-closed', 'true');
+    });
+  }
+
+  window.addEventListener('appinstalled', (evt) => {
+    console.log('App instalado com sucesso!');
+    if (banner) banner.style.display = 'none';
+  });
 }
 

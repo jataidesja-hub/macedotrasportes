@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#145a32">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -23,7 +24,8 @@
   </header>
 
   <nav id="nav-tabs">
-    <button class="tab-btn ativo" data-tab="multas">Multas</button>
+    <button class="tab-btn ativo" data-tab="dashboard">Dashboard</button>
+    <button class="tab-btn" data-tab="multas">Multas</button>
     <button class="tab-btn" data-tab="abastecimentos">Abastecimentos</button>
     <button class="tab-btn" data-tab="trocaoleo">Troca de Óleo</button>
     <button class="tab-btn" data-tab="danos">Danos</button>
@@ -103,8 +105,34 @@
   </div>
 
   <main>
+    <!-- Seção Dashboard -->
+    <section id="sec-dashboard" class="secao">
+      <h2>Dashboard Gerencial</h2>
+
+      <div class="dashboard-grid">
+        <div class="chart-card">
+          <h3>Top 5 - Veículos que mais abasteceram (L)</h3>
+          <canvas id="chartMaisAbastecidos"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Top 5 - Melhores Médias (km/L)</h3>
+          <canvas id="chartMelhoresMedias"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Faturamento vs Multas (Mensal)</h3>
+          <canvas id="chartMultasMensal"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Resumo de Gastos (R$)</h3>
+          <ul id="resumoGastos" class="rank-list">
+            <!-- Populado via JS -->
+          </ul>
+        </div>
+      </div>
+    </section>
+
     <!-- Seção Multas -->
-    <section id="sec-multas" class="secao">
+    <section id="sec-multas" class="secao" style="display:none">
       <h2>Multas</h2>
 
       <!-- OCR Box -->
@@ -356,6 +384,15 @@
   <div id="loading" class="loading-overlay" style="display:none">
     <div class="loading-spinner"></div>
     <p>Carregando...</p>
+  </div>
+
+  <!-- Banner PWA -->
+  <div id="pwa-install-banner">
+    <p>📲 Gostaria de instalar o sistema no seu celular?</p>
+    <div class="pwa-actions">
+      <button class="btn-pwa-install" id="btnPWAInstallNow">Instalar</button>
+      <button class="btn-pwa-close" id="btnPWACloseBanner">Talvez depois</button>
+    </div>
   </div>
 
   <script src="app.js"></script>
