@@ -211,10 +211,17 @@ function populateCombos() {
       state.veiculos.forEach(v => {
         select.innerHTML += `<option value="${v}">${v}</option>`;
       });
+
+      // Auto-preencher motorista ao selecionar veículo
+      select.addEventListener('change', (e) => {
+        const placa = e.target.value;
+        const prefix = id.split('-')[0];
+        autoFillMotorista(placa, prefix);
+      });
     }
   });
 
-  const motoristaSelects = ['multa-motorista', 'abast-motorista', 'oleo-motorista', 'dano-motorista'];
+  const motoristaSelects = ['multa-motorista', 'abast-motorista', 'oleo-motorista', 'dano-motorista', 'veic-motorista'];
   motoristaSelects.forEach(id => {
     const select = document.getElementById(id);
     if (select) {
@@ -479,6 +486,7 @@ function renderVeiculos() {
       <td>${v.ano || ''}</td>
       <td><span class="badge badge-${statusClass}">${statusText}</span></td>
       <td>${v.clrv ? `<a href="${v.clrv}" target="_blank" class="link-anexo">Ver CRLV</a>` : '-'}</td>
+      <td>${v.motorista || '-'}</td>
       <td>
         <button class="btn-small btn-edit" onclick="editVeiculo('${v.placa}')">Editar</button>
       </td>
@@ -727,6 +735,7 @@ async function saveVeiculo() {
     modelo: document.getElementById('veic-modelo').value,
     ano: document.getElementById('veic-ano').value,
     status: document.getElementById('veic-status').value,
+    motorista: document.getElementById('veic-motorista').value,
     clrv: '' // TODO: Upload de arquivo
   };
 
@@ -760,9 +769,27 @@ async function updateDanoStatus(rowIndex, novoStatus) {
 }
 
 function editVeiculo(placa) {
-  document.getElementById('veic-placa').value = placa;
+  const veiculo = state.veiculosLista.find(v => v.placa === placa);
+  if (veiculo) {
+    document.getElementById('veic-placa').value = veiculo.placa;
+    document.getElementById('veic-modelo').value = veiculo.modelo;
+    document.getElementById('veic-ano').value = veiculo.ano;
+    document.getElementById('veic-status').value = veiculo.status;
+    document.getElementById('veic-motorista').value = veiculo.motorista || '';
+  }
+
   // Scroll para o formulário
   document.getElementById('sec-veiculos').scrollIntoView({ behavior: 'smooth' });
+}
+
+function autoFillMotorista(placa, formPrefix) {
+  const veiculo = state.veiculosLista.find(v => v.placa === placa);
+  if (veiculo && veiculo.motorista) {
+    const selectMotorista = document.getElementById(`${formPrefix}-motorista`);
+    if (selectMotorista) {
+      selectMotorista.value = veiculo.motorista;
+    }
+  }
 }
 
 // ===== UTILITÁRIOS =====

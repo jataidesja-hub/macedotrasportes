@@ -181,8 +181,8 @@ function criarPlanilha() {
     veiculosSheet = ss.insertSheet('Veículos');
   }
   veiculosSheet.clear();
-  veiculosSheet.getRange(1, 1, 1, 5).setValues([[
-    'Placa', 'Modelo', 'Ano', 'Status', 'Anexo CLRV'
+  veiculosSheet.getRange(1, 1, 1, 6).setValues([[
+    'Placa', 'Modelo', 'Ano', 'Status', 'Anexo CLRV', 'Motorista'
   ]]).setFontWeight('bold');
   veiculosSheet.setFrozenRows(1);
   veiculosSheet.getRange('C:C').setNumberFormat('0000');
@@ -299,7 +299,7 @@ function getDadosVeiculos() {
   if (!sh) return [];
   const lastRow = sh.getLastRow();
   if (lastRow < 2) return [];
-  const values = sh.getRange(2, 1, lastRow - 1, 5).getValues();
+  const values = sh.getRange(2, 1, lastRow - 1, 6).getValues();
 
   const resultado = [];
   for (let i = 0; i < values.length; i++) {
@@ -310,6 +310,7 @@ function getDadosVeiculos() {
       ano: r[2] || '',
       status: r[3] || '',
       clrv: r[4] || '',
+      motorista: r[5] || '',
       rowIndex: i + 2
     });
   }
@@ -755,13 +756,15 @@ function adicionarVeiculo(dados) {
     if (dados.clrv) {
        sh.getRange(rowIndex, 5).setValue(dados.clrv);
     }
+    sh.getRange(rowIndex, 6).setValue(dados.motorista || '');
   } else {
     sh.appendRow([
       dados.placa,
       dados.modelo,
       dados.ano,
       dados.status,
-      dados.clrv || ''
+      dados.clrv || '',
+      dados.motorista || ''
     ]);
   }
 }
