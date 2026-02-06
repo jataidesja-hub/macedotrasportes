@@ -1,0 +1,21 @@
+{
+  "name": "Macedo Transportes - Gestão de Frota",
+  "short_name": "Macedo Frota",
+  "description": "Sistema de Gerenciamento de Frota Macedo Transportes",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3f5f7",
+  "theme_color": "#145a32",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1048/1048314.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1048/1048314.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -51,6 +51,29 @@ header {
   width: auto;
 }
 
+#btnAppInstall {
+  background: var(--warning-color);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  display: none;
+  /* Oculto por padrão, mostrado via JS */
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  margin-left: auto;
+}
+
+#btnAppInstall:hover {
+  background: #d68910;
+  transform: scale(1.05);
+}
+
 .header-text h1 {
   font-size: 24px;
   margin: 0;
@@ -65,17 +88,25 @@ header {
 /* Navigation */
 nav {
   background: var(--primary-light);
-  padding: 8px 24px;
+  padding: 8px 12px;
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* Firefox */
   max-width: 1400px;
   margin: 0 auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+nav::-webkit-scrollbar {
+  display: none;
+  /* Chrome/Safari */
 }
 
 .tab-btn {
   border: none;
-  padding: 10px 16px;
+  padding: 10px 18px;
   border-radius: 6px;
   cursor: pointer;
   background: rgba(255, 255, 255, 0.9);
@@ -83,6 +114,7 @@ nav {
   font-weight: 600;
   font-size: 14px;
   transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .tab-btn:hover {
@@ -585,21 +617,39 @@ tr:last-child td {
     padding: 12px 16px;
   }
 
-  main {
-    padding: 16px;
+  .tab-btn {
+    padding: 10px 14px;
+    font-size: 13px;
   }
 
-  .secao {
-    padding: 16px;
-  }
-
-  .form-grid {
+  .filtros-grid {
     grid-template-columns: 1fr;
   }
 
   .indicadores-container {
     grid-template-columns: 1fr 1fr;
-    padding: 16px;
+    gap: 10px;
+    padding: 15px;
+  }
+
+  .card-indicador {
+    padding: 12px;
+  }
+
+  .card-indicador .valor {
+    font-size: 18px;
+  }
+
+  /* Ajuste para botões de filtro no mobile */
+  .filter-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    text-align: center;
   }
 }
 

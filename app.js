@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initFilters();
   initForms();
   loadAllData();
+  initPWA();
 });
 
 // ===== NAVEGAÇÃO POR ABAS =====
@@ -824,7 +825,51 @@ async function extractOCRData() {
     return;
   }
 
-  const file = fileInput.files[0];
+  // ===== PWA - INSTALAÇÃO E SERVICE WORKER =====
+  let deferredPrompt;
+
+  function initPWA() {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('SW registrado!', reg))
+          .catch(err => console.log('Erro SW:', err));
+      });
+    }
+
+    const btnInstall = document.getElementById('btnAppInstall');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Previne que o Chrome 67 ou anterior mostre o prompt automaticamente
+      e.preventDefault();
+      // Guarda o evento para ser disparado depois
+      deferredPrompt = e;
+      // Mostra o botão de instalação
+      if (btnInstall) {
+        btnInstall.style.display = 'flex';
+      }
+    });
+
+    if (btnInstall) {
+      btnInstall.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        // Mostra o prompt
+        deferredPrompt.prompt();
+        // Aguarda a resposta do usuário
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`Usuário escolheu: ${outcome}`);
+        // Limpa o prompt
+        deferredPrompt = null;
+        // Esconde o botão
+        btnInstall.style.display = 'none';
+      });
+    }
+
+    window.addEventListener('appinstalled', (evt) => {
+      console.log('App instalado com sucesso!');
+      if (btnInstall) btnInstall.style.display = 'none';
+    });
+  }
 
   // Verificar tipo de arquivo
   if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
