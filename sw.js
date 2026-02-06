@@ -1,4 +1,4 @@
-const CACHE_NAME = 'macedo-frota-v1';
+const CACHE_NAME = 'macedo-frota-v2';
 const ASSETS = [
     './',
     './index.html',
