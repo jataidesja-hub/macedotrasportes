@@ -542,7 +542,35 @@ tr:last-child td {
   color: var(--danger-color);
 }
 
-/* Link */
+/* Botões de Ação na Tabela */
+.acoes-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-wa {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #25d366;
+  color: white !important;
+  padding: 6px;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-wa:hover {
+  background-color: #128c7e;
+  transform: scale(1.05);
+}
+
+.btn-wa svg {
+  display: block;
+}
+
+/* Link Anexo */
 .link-anexo {
   color: var(--info-color);
   text-decoration: none;

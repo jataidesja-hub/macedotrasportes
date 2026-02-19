@@ -410,6 +410,21 @@ function filterData(data) {
   });
 }
 
+function generateWhatsAppLink(m) {
+  const text = `*Informações da Multa - Macedo Transportes*\n\n` +
+    `*Data:* ${m.data}\n` +
+    `*Veículo:* ${m.veiculo}\n` +
+    `*Motorista:* ${m.motorista}\n` +
+    `*Tipo:* ${m.tipo}\n` +
+    `*Auto:* ${m.auto}\n` +
+    `*Valor:* R$ ${formatNumber(m.valor)}\n` +
+    `*Status:* ${m.status || 'Pendente'}\n` +
+    `*Data Limite:* ${m.dataLimite || '-'}\n` +
+    (m.anexo ? `\n*Anexo:* ${m.anexo}` : '');
+
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
+
 function renderMultas() {
   const tbody = document.querySelector('#tabelaMultas tbody');
   const filtered = filterData(state.multas);
@@ -417,6 +432,8 @@ function renderMultas() {
 
   tbody.innerHTML = sorted.map(m => {
     const statusClass = m.status === 'Pago' ? 'badge-resolvido' : 'badge-pendente';
+    const waLink = generateWhatsAppLink(m);
+
     return `
     <tr>
       <td>${m.data}</td>
@@ -429,10 +446,15 @@ function renderMultas() {
       <td><span class="badge ${statusClass}">${m.status || 'Pendente'}</span></td>
       <td>${m.dataLimite || '-'}</td>
       <td>
-        <select class="btn-small btn-status" onchange="updateMultaStatus(${m.rowIndex}, this.value)">
-          <option value="Pendente" ${m.status !== 'Pago' ? 'selected' : ''}>Pendente</option>
-          <option value="Pago" ${m.status === 'Pago' ? 'selected' : ''}>Pago</option>
-        </select>
+        <div class="acoes-container" style="display:flex; gap:8px; align-items:center">
+          <select class="btn-small btn-status" onchange="updateMultaStatus(${m.rowIndex}, this.value)">
+            <option value="Pendente" ${m.status !== 'Pago' ? 'selected' : ''}>Pendente</option>
+            <option value="Pago" ${m.status === 'Pago' ? 'selected' : ''}>Pago</option>
+          </select>
+          <a href="${waLink}" target="_blank" title="Encaminhar WhatsApp" class="btn-wa">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12.031 6.172c-2.32 0-4.519.903-6.16 2.544-3.399 3.4-3.399 8.929 0 12.329l-1.03 3.093 3.146-1.016a8.618 8.618 0 004.044 1.012h.001c2.32 0 4.519-.903 6.16-2.544 3.399-3.4 3.399-8.929 0-12.329-1.641-1.641-3.84-2.544-6.161-2.544zM16.421 17.512c-.244.688-1.218 1.252-1.681 1.341-.462.089-.915.111-2.911-.702-2.112-.857-3.456-2.991-3.563-3.133-.106-.142-.862-1.144-.862-2.182 0-1.038.543-1.547.734-1.758.192-.212.413-.265.552-.265.138 0 .276 0 .393.006.128.006.297-.048.467.359.17.408.584 1.423.637 1.529.053.106.089.23.018.371-.071.142-.106.23-.212.353-.106.123-.223.275-.318.369-.106.106-.217.222-.094.433.123.212.548.905 1.178 1.464.812.721 1.496.944 1.708 1.05.212.106.337.089.463-.053.127-.142.541-.632.686-.844.144-.212.29-.177.488-.106.198.071 1.264.596 1.482.704s.359.162.413.254c.054.092.054.532-.19 1.22z"/></svg>
+          </a>
+        </div>
       </td>
     </tr>
   `;
