@@ -741,7 +741,7 @@ async function saveMulta() {
 
   // Verificar duplicidade
   if (autoValor) {
-    const jaExiste = state.multas.some(m => m.auto.toUpperCase() === autoValor);
+    const jaExiste = state.multas.some(m => m.auto.toUpperCase() === autoValor && m.rowIndex !== state.editingMultaIndex);
     if (jaExiste) {
       statusEl.textContent = 'ERRO: Esta multa já foi lançada!';
       statusEl.className = 'status-msg status-error';
