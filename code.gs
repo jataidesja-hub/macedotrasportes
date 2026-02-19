@@ -80,6 +80,10 @@ function doPost(e) {
       adicionarMulta(dados);
       result.success = true;
       break;
+    case 'editMulta':
+      editarMulta(dados);
+      result.success = true;
+      break;
     case 'addAbastecimento':
       adicionarAbastecimento(dados);
       result.success = true;
@@ -808,6 +812,27 @@ function atualizarStatusDano(rowIndex, novoStatus) {
   const sh = SpreadsheetApp.getActive().getSheetByName('Danos');
   if (!sh || !rowIndex) return;
   sh.getRange(rowIndex, 5).setValue(novoStatus);
+}
+
+function editarMulta(dados) {
+  const sh = SpreadsheetApp.getActive().getSheetByName('Multas');
+  if (!sh || !dados.rowIndex) return;
+  
+  const data = parseDateLocal(dados.data);
+  const valor = dados.valor ? Number(dados.valor) : 0;
+  const dataLimite = dados.dataLimite ? parseDateLocal(dados.dataLimite) : '';
+  
+  sh.getRange(dados.rowIndex, 1, 1, 9).setValues([[
+    data,
+    dados.veiculo,
+    dados.motorista,
+    dados.tipo,
+    dados.auto,
+    dados.anexo || '',
+    valor,
+    dados.status || 'Pendente',
+    dataLimite
+  ]]);
 }
 
 function atualizarStatusMulta(rowIndex, novoStatus) {

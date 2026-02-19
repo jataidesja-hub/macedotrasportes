@@ -380,6 +380,15 @@ main {
   transform: translateY(-2px);
 }
 
+.form-actions button.btn-edit-mode {
+  background: var(--warning-color);
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+}
+
+.form-actions button.btn-edit-mode:hover {
+  background: #d68910;
+}
+
 /* Tables */
 .table-container {
   overflow-x: auto;

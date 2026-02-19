@@ -22,7 +22,8 @@ let state = {
   filtroStatus: '',
   filtroBusca: '',
   filtroMesFim: '',
-  activeTab: 'dashboard'
+  activeTab: 'dashboard',
+  editingMultaIndex: null
 };
 
 // ===== INICIALIZAÇÃO =====
@@ -447,6 +448,9 @@ function renderMultas() {
       <td>${m.dataLimite || '-'}</td>
       <td>
         <div class="acoes-container" style="display:flex; gap:8px; align-items:center">
+          <button class="btn-small btn-edit" title="Editar" onclick="editMulta(${m.rowIndex})">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+          </button>
           <select class="btn-small btn-status" onchange="updateMultaStatus(${m.rowIndex}, this.value)">
             <option value="Pendente" ${m.status !== 'Pago' ? 'selected' : ''}>Pendente</option>
             <option value="Pago" ${m.status === 'Pago' ? 'selected' : ''}>Pago</option>
@@ -459,6 +463,39 @@ function renderMultas() {
     </tr>
   `;
   }).join('');
+}
+
+function editMulta(rowIndex) {
+  const m = state.multas.find(item => item.rowIndex === rowIndex);
+  if (!m) return;
+
+  state.editingMultaIndex = rowIndex;
+
+  // Preencher formulário
+  // Data está em DD/MM/YYYY, precisa ser YYYY-MM-DD para input date
+  if (m.data) {
+    const partes = m.data.split('/');
+    document.getElementById('multa-data').value = `${partes[2]}-${partes[1]}-${partes[0]}`;
+  }
+
+  document.getElementById('multa-veiculo').value = m.veiculo;
+  document.getElementById('multa-motorista').value = m.motorista;
+  document.getElementById('multa-tipo').value = m.tipo;
+  document.getElementById('multa-auto').value = m.auto;
+  document.getElementById('multa-valor').value = m.valor;
+
+  if (m.dataLimite) {
+    const partes = m.dataLimite.split('/');
+    document.getElementById('multa-datalimite').value = `${partes[2]}-${partes[1]}-${partes[0]}`;
+  }
+
+  // Mudar botão
+  const btn = document.getElementById('btnSalvarMulta');
+  btn.textContent = 'Atualizar multa';
+  btn.classList.add('btn-edit-mode');
+
+  // Rolar para o topo do formulário
+  document.querySelector('#sec-multas').scrollIntoView({ behavior: 'smooth' });
 }
 
 function renderAbastecimentos() {
@@ -725,13 +762,15 @@ async function saveMulta() {
     auto: autoValor,
     valor: document.getElementById('multa-valor').value,
     dataLimite: document.getElementById('multa-datalimite').value,
-    anexo: '' // TODO: Upload de arquivo
+    anexo: '', // TODO: Upload de arquivo
+    rowIndex: state.editingMultaIndex
   };
 
-  const result = await postApi('addMulta', data);
+  const action = state.editingMultaIndex ? 'editMulta' : 'addMulta';
+  const result = await postApi(action, data);
 
   if (result) {
-    statusEl.textContent = 'Salvo com sucesso!';
+    statusEl.textContent = state.editingMultaIndex ? 'Atualizado com sucesso!' : 'Salvo com sucesso!';
     statusEl.className = 'status-msg status-saved';
     clearForm('multa');
     loadMultas();
@@ -945,6 +984,15 @@ function clearForm(prefix) {
       input.value = '';
     }
   });
+
+  if (prefix === 'multa') {
+    state.editingMultaIndex = null;
+    const btn = document.getElementById('btnSalvarMulta');
+    if (btn) {
+      btn.textContent = 'Salvar multa';
+      btn.classList.remove('btn-edit-mode');
+    }
+  }
 }
 
 // ===== OCR - EXTRAÇÃO DE DADOS DE PDF =====
