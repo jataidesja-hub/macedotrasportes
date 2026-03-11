@@ -23,7 +23,8 @@ let state = {
   filtroBusca: '',
   filtroMesFim: '',
   activeTab: 'dashboard',
-  editingMultaIndex: null
+  editingMultaIndex: null,
+  editingMultaAnexo: ''
 };
 
 // ===== INICIALIZAÇÃO =====
@@ -470,6 +471,7 @@ function editMulta(rowIndex) {
   if (!m) return;
 
   state.editingMultaIndex = rowIndex;
+  state.editingMultaAnexo = m.anexo || '';
 
   // Preencher formulário
   // Data está em DD/MM/YYYY, precisa ser YYYY-MM-DD para input date
@@ -487,6 +489,18 @@ function editMulta(rowIndex) {
   if (m.dataLimite) {
     const partes = m.dataLimite.split('/');
     document.getElementById('multa-datalimite').value = `${partes[2]}-${partes[1]}-${partes[0]}`;
+  }
+
+  // Mostrar indicador do anexo existente
+  const anexoInfo = document.getElementById('multa-anexo-info');
+  if (anexoInfo) {
+    if (m.anexo) {
+      anexoInfo.innerHTML = `📎 <a href="${m.anexo}" target="_blank">Anexo atual</a> (selecione novo arquivo para substituir)`;
+      anexoInfo.style.display = 'block';
+    } else {
+      anexoInfo.innerHTML = '';
+      anexoInfo.style.display = 'none';
+    }
   }
 
   // Mudar botão
@@ -754,6 +768,27 @@ async function saveMulta() {
   statusEl.className = 'status-msg status-saving';
   autoInput.classList.remove('input-error');
 
+  // Processar arquivo anexo
+  const fileInput = document.getElementById('multa-anexo');
+  let anexoBase64 = '';
+  let anexoNome = '';
+  let anexoTipo = '';
+
+  if (fileInput && fileInput.files && fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    statusEl.textContent = 'Enviando anexo...';
+    try {
+      anexoBase64 = await fileToBase64(file);
+      anexoNome = file.name;
+      anexoTipo = file.type;
+    } catch (err) {
+      console.error('Erro ao converter arquivo:', err);
+      statusEl.textContent = 'Erro ao processar anexo';
+      statusEl.className = 'status-msg status-error';
+      return;
+    }
+  }
+
   const data = {
     data: document.getElementById('multa-data').value,
     veiculo: document.getElementById('multa-veiculo').value,
@@ -762,10 +797,21 @@ async function saveMulta() {
     auto: autoValor,
     valor: document.getElementById('multa-valor').value,
     dataLimite: document.getElementById('multa-datalimite').value,
-    anexo: '', // TODO: Upload de arquivo
     rowIndex: state.editingMultaIndex
   };
 
+  // Enviar arquivo base64 se selecionado, senão preservar anexo existente na edição
+  if (anexoBase64) {
+    data.anexoBase64 = anexoBase64;
+    data.anexoNome = anexoNome;
+    data.anexoTipo = anexoTipo;
+  } else if (state.editingMultaIndex) {
+    data.anexo = state.editingMultaAnexo || '';
+  } else {
+    data.anexo = '';
+  }
+
+  statusEl.textContent = 'Salvando...';
   const action = state.editingMultaIndex ? 'editMulta' : 'addMulta';
   const result = await postApi(action, data);
 
@@ -987,10 +1033,19 @@ function clearForm(prefix) {
 
   if (prefix === 'multa') {
     state.editingMultaIndex = null;
+    state.editingMultaAnexo = '';
     const btn = document.getElementById('btnSalvarMulta');
     if (btn) {
       btn.textContent = 'Salvar multa';
       btn.classList.remove('btn-edit-mode');
+    }
+    // Limpar file input e info do anexo
+    const fileInput = document.getElementById('multa-anexo');
+    if (fileInput) fileInput.value = '';
+    const anexoInfo = document.getElementById('multa-anexo-info');
+    if (anexoInfo) {
+      anexoInfo.innerHTML = '';
+      anexoInfo.style.display = 'none';
     }
   }
 }

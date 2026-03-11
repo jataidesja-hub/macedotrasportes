@@ -694,6 +694,34 @@ function parseDateLocal(dateString) {
 
 /* === INSERIR DADOS === */
 
+function uploadAnexoParaDrive(dados) {
+  if (!dados.anexoBase64 || !dados.anexoNome) return dados.anexo || '';
+  
+  try {
+    var folders = DriveApp.getFoldersByName('Multas_Anexos');
+    var folder;
+    if (folders.hasNext()) {
+      folder = folders.next();
+    } else {
+      folder = DriveApp.createFolder('Multas_Anexos');
+    }
+    
+    var blob = Utilities.newBlob(
+      Utilities.base64Decode(dados.anexoBase64),
+      dados.anexoTipo || 'application/octet-stream',
+      dados.anexoNome
+    );
+    
+    var file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    
+    return 'https://drive.google.com/file/d/' + file.getId() + '/view';
+  } catch(err) {
+    Logger.log('Erro ao fazer upload do anexo: ' + err);
+    return dados.anexo || '';
+  }
+}
+
 function adicionarMulta(dados) {
   const sh = SpreadsheetApp.getActive().getSheetByName('Multas');
   if (!sh) return;
@@ -701,13 +729,15 @@ function adicionarMulta(dados) {
   const valor = dados.valor ? Number(dados.valor) : 0;
   const dataLimite = dados.dataLimite ? parseDateLocal(dados.dataLimite) : '';
   
+  var anexoUrl = uploadAnexoParaDrive(dados);
+  
   sh.appendRow([
     data,
     dados.veiculo,
     dados.motorista,
     dados.tipo,
     dados.auto,
-    dados.anexo || '',
+    anexoUrl,
     valor,
     'Pendente',
     dataLimite
@@ -822,15 +852,27 @@ function editarMulta(dados) {
   const valor = dados.valor ? Number(dados.valor) : 0;
   const dataLimite = dados.dataLimite ? parseDateLocal(dados.dataLimite) : '';
   
+  var anexoUrl = uploadAnexoParaDrive(dados);
+  
+  // Preservar status atual da multa
+  var statusAtual = dados.status || '';
+  if (!statusAtual) {
+    try {
+      statusAtual = sh.getRange(dados.rowIndex, 8).getValue() || 'Pendente';
+    } catch(e) {
+      statusAtual = 'Pendente';
+    }
+  }
+  
   sh.getRange(dados.rowIndex, 1, 1, 9).setValues([[
     data,
     dados.veiculo,
     dados.motorista,
     dados.tipo,
     dados.auto,
-    dados.anexo || '',
+    anexoUrl,
     valor,
-    dados.status || 'Pendente',
+    statusAtual,
     dataLimite
   ]]);
 }
