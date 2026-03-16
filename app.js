@@ -234,6 +234,10 @@ function populateCombos() {
         const placa = e.target.value;
         const prefix = id.split('-')[0];
         autoFillMotorista(placa, prefix);
+
+        if (prefix === 'oleo') {
+          autoFillUltimoKm(placa);
+        }
       });
     }
   });
@@ -1012,6 +1016,24 @@ function autoFillMotorista(placa, formPrefix) {
     if (selectMotorista) {
       selectMotorista.value = veiculo.motorista;
     }
+  }
+}
+
+function autoFillUltimoKm(placa) {
+  const ultimoKmInput = document.getElementById('oleo-ultimokm');
+  if (!ultimoKmInput) return;
+
+  if (!placa) {
+    ultimoKmInput.value = '';
+    return;
+  }
+
+  const abastVeiculo = state.abastecimentos.filter(a => a.veiculo === placa);
+  if (abastVeiculo.length > 0) {
+    const maxKm = Math.max(...abastVeiculo.map(a => Number(a.km) || 0));
+    ultimoKmInput.value = maxKm > 0 ? maxKm : '';
+  } else {
+    ultimoKmInput.value = '';
   }
 }
 
