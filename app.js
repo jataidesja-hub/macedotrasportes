@@ -1,12 +1,12 @@
 /**
  * MACEDO TRANSPORTES - SISTEMA DE FROTA
- * Frontend JavaScript - Integraﾃｧﾃ｣o com Apps Script
+ * Frontend JavaScript - Integração com Apps Script
  */
 
 // URL do Apps Script
 const API_URL = 'https://script.google.com/macros/s/AKfycbyYaquZkyr0Ec0t7WGxnRPEB3UfM6JcVzuHgAzNb78ZRh209MrhA9j9qSnbws8FWt-V/exec';
 
-// Estado da aplicaﾃｧﾃ｣o
+// Estado da aplicação
 let state = {
   veiculosLista: [],
   veiculos: [],
@@ -27,7 +27,7 @@ let state = {
   editingMultaAnexo: ''
 };
 
-// ===== INICIALIZAﾃ�グ =====
+// ===== INICIALIZAÇÃO =====
 document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   initFilters();
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initPWA();
 });
 
-// ===== NAVEGAﾃ�グ POR ABAS =====
+// ===== NAVEGAÇÃO POR ABAS =====
 function initTabs() {
   const tabs = document.querySelectorAll('.tab-btn');
   tabs.forEach(tab => {
@@ -45,9 +45,9 @@ function initTabs() {
       tabs.forEach(t => t.classList.remove('ativo'));
       // Adiciona ativo na clicada
       tab.classList.add('ativo');
-      // Esconde todas as seﾃｧﾃｵes
+      // Esconde todas as seções
       document.querySelectorAll('.secao').forEach(s => s.style.display = 'none');
-      // Mostra seﾃｧﾃ｣o correspondente
+      // Mostra seção correspondente
       state.activeTab = tab.dataset.tab;
       const secao = document.getElementById('sec-' + tab.dataset.tab);
       if (secao) secao.style.display = 'block';
@@ -102,7 +102,7 @@ function clearFilters() {
   loadConsumo();
 }
 
-// ===== FORMULﾃヽIOS =====
+// ===== FORMULÁRIOS =====
 function initForms() {
   // Multas
   document.getElementById('btnSalvarMulta').addEventListener('click', saveMulta);
@@ -110,17 +110,17 @@ function initForms() {
   document.getElementById('btnExtrairDados').addEventListener('click', extractOCRData);
   // Abastecimentos
   document.getElementById('btnSalvarAbast').addEventListener('click', saveAbastecimento);
-  // Troca de ﾃ斗eo
+  // Troca de Óleo
   document.getElementById('btnSalvarOleo').addEventListener('click', saveTrocaOleo);
   // Danos
   document.getElementById('btnSalvarDano').addEventListener('click', saveDano);
   // Motoristas
   document.getElementById('btnSalvarMotorista').addEventListener('click', saveMotorista);
-  // Veﾃｭculos
+  // Veículos
   document.getElementById('btnSalvarVeiculo').addEventListener('click', saveVeiculo);
   document.getElementById('btnExtrairDadosCRLV').addEventListener('click', extractOCRDataCRLV);
 
-  // Gatilhos automﾃ｡ticos para OCR ao selecionar arquivo
+  // Gatilhos automáticos
   document.getElementById('multa-pdf-ocr').addEventListener('change', extractOCRData);
   document.getElementById('veic-crlv-ocr').addEventListener('change', extractOCRDataCRLV);
   document.getElementById('veic-crlv').addEventListener('change', function() {
@@ -217,9 +217,9 @@ async function loadCombos() {
 }
 
 function populateCombos() {
-  // Veﾃｭculos - Filtro Global
+  // Veículos - Filtro Global
   const filtroVeiculo = document.getElementById('filtroVeiculoGlobal');
-  filtroVeiculo.innerHTML = '<option value="">Todos os veﾃｭculos</option>';
+  filtroVeiculo.innerHTML = '<option value="">Todos os veículos</option>';
   state.veiculos.forEach(v => {
     filtroVeiculo.innerHTML += `<option value="${v}">${v}</option>`;
   });
@@ -231,7 +231,7 @@ function populateCombos() {
     filtroMotorista.innerHTML += `<option value="${m}">${m}</option>`;
   });
 
-  // Combos nos formulﾃ｡rios
+  // Combos nos formulários
   const veiculoSelects = ['multa-veiculo', 'abast-veiculo', 'oleo-veiculo', 'dano-veiculo'];
   veiculoSelects.forEach(id => {
     const select = document.getElementById(id);
@@ -241,7 +241,7 @@ function populateCombos() {
         select.innerHTML += `<option value="${v}">${v}</option>`;
       });
 
-      // Auto-preencher motorista ao selecionar veﾃｭculo
+      // Auto-preencher motorista ao selecionar veículo
       select.addEventListener('change', (e) => {
         const placa = e.target.value;
         const prefix = id.split('-')[0];
@@ -341,7 +341,7 @@ async function loadConsumo() {
   }
 }
 
-// Funﾃｧﾃ｣o para carregar dados especﾃｭficos do dashboard
+// Função para carregar dados específicos do dashboard
 async function loadDashboardData() {
   await Promise.all([
     loadIndicadores(),
@@ -350,7 +350,7 @@ async function loadDashboardData() {
   renderDashboard();
 }
 
-// ===== RENDERIZAﾃ�グ =====
+// ===== RENDERIZAÇÃO =====
 function renderAllTables() {
   renderMultas();
   renderAbastecimentos();
@@ -364,13 +364,13 @@ function sortByDate(data) {
     const dataA = (a.data || '').trim();
     const dataB = (b.data || '').trim();
 
-    // Se ambos vazios, mantﾃｩm posiﾃｧﾃ｣o
+    // Se ambos vazios, mantém posição
     if (!dataA && !dataB) return 0;
     // Se um vazio, joga para o fim (baixo)
     if (!dataA) return 1;
     if (!dataB) return -1;
 
-    // Converter DD/MM/YYYY para YYYYMMDD para comparaﾃｧﾃ｣o de string
+    // Converter DD/MM/YYYY para YYYYMMDD para comparação de string
     const d1 = dataA.split('/').reverse().join('');
     const d2 = dataB.split('/').reverse().join('');
 
@@ -380,7 +380,7 @@ function sortByDate(data) {
 
 function filterData(data) {
   return data.filter(item => {
-    // 1. Filtro de Veﾃｭculo
+    // 1. Filtro de Veículo
     if (state.filtroVeiculo && item.veiculo !== state.filtroVeiculo) return false;
 
     // 2. Filtro de Motorista
@@ -398,7 +398,7 @@ function filterData(data) {
       }
     }
 
-    // 4. Filtro de Perﾃｭodo (Mﾃｪs/Ano)
+    // 4. Filtro de Período (Mês/Ano)
     if (item.data && (state.filtroMesInicio || state.filtroMesFim)) {
       // Assumindo data no formato DD/MM/YYYY
       const partes = item.data.split('/');
@@ -410,7 +410,7 @@ function filterData(data) {
       }
     }
 
-    // 5. Busca Global (Auto, Tipo, Descriﾃｧﾃ｣o)
+    // 5. Busca Global (Auto, Tipo, Descrição)
     if (state.filtroBusca) {
       const busca = state.filtroBusca;
       const conteudo = [
@@ -429,9 +429,9 @@ function filterData(data) {
 }
 
 function generateWhatsAppLink(m) {
-  const text = `*Informaﾃｧﾃｵes da Multa - Macedo Transportes*\n\n` +
+  const text = `*Informações da Multa - Macedo Transportes*\n\n` +
     `*Data:* ${m.data}\n` +
-    `*Veﾃｭculo:* ${m.veiculo}\n` +
+    `*Veículo:* ${m.veiculo}\n` +
     `*Motorista:* ${m.motorista}\n` +
     `*Tipo:* ${m.tipo}\n` +
     `*Auto:* ${m.auto}\n` +
@@ -489,8 +489,8 @@ function editMulta(rowIndex) {
   state.editingMultaIndex = rowIndex;
   state.editingMultaAnexo = m.anexo || '';
 
-  // Preencher formulﾃ｡rio
-  // Data estﾃ｡ em DD/MM/YYYY, precisa ser YYYY-MM-DD para input date
+  // Preencher formulário
+  // Data está em DD/MM/YYYY, precisa ser YYYY-MM-DD para input date
   if (m.data) {
     const partes = m.data.split('/');
     document.getElementById('multa-data').value = `${partes[2]}-${partes[1]}-${partes[0]}`;
@@ -511,7 +511,7 @@ function editMulta(rowIndex) {
   const anexoInfo = document.getElementById('multa-anexo-info');
   if (anexoInfo) {
     if (m.anexo) {
-      anexoInfo.innerHTML = `�梼 <a href="${m.anexo}" target="_blank">Anexo atual</a> (selecione novo arquivo para substituir)`;
+      anexoInfo.innerHTML = `📎 <a href="${m.anexo}" target="_blank">Anexo atual</a> (selecione novo arquivo para substituir)`;
       anexoInfo.style.display = 'block';
     } else {
       anexoInfo.innerHTML = '';
@@ -519,12 +519,12 @@ function editMulta(rowIndex) {
     }
   }
 
-  // Mudar botﾃ｣o
+  // Mudar botão
   const btn = document.getElementById('btnSalvarMulta');
   btn.textContent = 'Atualizar multa';
   btn.classList.add('btn-edit-mode');
 
-  // Rolar para o topo do formulﾃ｡rio
+  // Rolar para o topo do formulário
   document.querySelector('#sec-multas').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -588,23 +588,23 @@ function renderVeiculos() {
   const data = state.veiculosLista || [];
 
   if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">Nenhum veﾃｭculo cadastrado</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">Nenhum veículo cadastrado</td></tr>';
     return;
   }
 
   tbody.innerHTML = data.map(v => {
     const statusText = v.status || 'Ativo';
-    const statusClass = statusText.toLowerCase().replace(/ﾃｧ/g, 'c').replace(/ﾃ｣/g, 'a');
+    const statusClass = statusText.toLowerCase().replace(/ç/g, 'c').replace(/ã/g, 'a');
     return `
     <tr>
       <td data-label="Placa">${v.placa || ''}</td>
       <td data-label="Modelo">${v.modelo || ''}</td>
       <td data-label="Ano">${v.ano || ''}</td>
-      <td data-label="Exercﾃｭcio">${v.anoExercicio || '-'}</td>
+      <td data-label="Exercício">${v.anoExercicio || '-'}</td>
       <td data-label="Status"><span class="badge badge-${statusClass}">${statusText}</span></td>
       <td data-label="CRLV">${v.clrv ? `<a href="${v.clrv}" target="_blank" class="link-anexo">Ver CRLV</a>` : '-'}</td>
       <td data-label="Motorista">${v.motorista || '-'}</td>
-      <td data-label="Aﾃｧﾃｵes">
+      <td data-label="Ações">
         <button class="btn-small btn-edit" onclick="editVeiculo('${v.placa}')">Editar</button>
       </td>
     </tr>
@@ -643,7 +643,7 @@ function renderAlertasOleo(alertas) {
     <div class="alert-item">
       <strong>${a.veiculo}</strong> - 
       <span class="badge badge-oleo-${a.classe}">${a.status}</span> - 
-      Km atual: ${formatNumber(a.kmAtual)} | Prﾃｳxima: ${formatNumber(a.proximaTroca)} | 
+      Km atual: ${formatNumber(a.kmAtual)} | Próxima: ${formatNumber(a.proximaTroca)} | 
       Restante: ${formatNumber(a.kmRestante)} km
     </div>
   `).join('');
@@ -699,9 +699,9 @@ function renderDashboard() {
         <span class="value">${formatNumber(i[1])} L</span>
       </li>
     `).join('')
-    : '<li class="rank-item">Sem dados no perﾃｭodo</li>';
+    : '<li class="rank-item">Sem dados no período</li>';
 
-  // 2. Melhores Mﾃｩdias
+  // 2. Melhores Médias
   const melhoresMedias = [...dataConsumo]
     .filter(c => c.consumo > 0)
     .sort((a, b) => b.consumo - a.consumo)
@@ -714,7 +714,7 @@ function renderDashboard() {
         <span class="value">${formatNumber(m.consumo)} km/L</span>
       </li>
     `).join('')
-    : '<li class="rank-item">Sem dados no perﾃｭodo</li>';
+    : '<li class="rank-item">Sem dados no período</li>';
 
   // 3. Multas Mensais (Lista simples)
   const mesesMultas = {};
@@ -742,7 +742,7 @@ function renderDashboard() {
         </span>
       </li>
     `).join('')
-    : '<li class="rank-item">Sem multas no perﾃｭodo</li>';
+    : '<li class="rank-item">Sem multas no período</li>';
 
   // 4. Resumo de Gastos
   const totalLitros = dataAbast.reduce((sum, a) => sum + Number(a.litros || 0), 0);
@@ -753,13 +753,13 @@ function renderDashboard() {
     <li class="rank-item"><span class="label">Total Litros:</span> <span class="value">${formatNumber(totalLitros)} L</span></li>
     <li class="rank-item"><span class="label">Abastecimento:</span> <span class="value">R$ ${formatNumber(totalAbastVal)}</span></li>
     <li class="rank-item"><span class="label">Total Multas:</span> <span class="value">R$ ${formatNumber(totalMultasVal)}</span></li>
-    <li class="rank-item"><span class="label">Mﾃｩdia R$/L:</span> <span class="value">R$ ${totalLitros > 0 ? formatNumber(totalAbastVal / totalLitros) : '0,00'}</span></li>
+    <li class="rank-item"><span class="label">Média R$/L:</span> <span class="value">R$ ${totalLitros > 0 ? formatNumber(totalAbastVal / totalLitros) : '0,00'}</span></li>
   `;
   const resumoEl = document.getElementById('resumoGastos');
   if (resumoEl) resumoEl.innerHTML = resumoHtml;
 }
 
-// Removendo funﾃｧﾃ｣o de chart para economizar memﾃｳria
+// Removendo função de chart para economizar memória
 function renderChart(id, type, data) {
   console.log('Graficos desativados para melhor performance.');
 }
@@ -774,7 +774,7 @@ async function saveMulta() {
   if (autoValor) {
     const jaExiste = state.multas.some(m => m.auto.toUpperCase() === autoValor && m.rowIndex !== state.editingMultaIndex);
     if (jaExiste) {
-      statusEl.textContent = 'ERRO: Esta multa jﾃ｡ foi lanﾃｧada!';
+      statusEl.textContent = 'ERRO: Esta multa já foi lançada!';
       statusEl.className = 'status-msg status-error';
       autoInput.classList.add('input-error');
       return;
@@ -817,7 +817,7 @@ async function saveMulta() {
     rowIndex: state.editingMultaIndex
   };
 
-  // Enviar arquivo base64 se selecionado, senﾃ｣o preservar anexo existente na ediﾃｧﾃ｣o
+  // Enviar arquivo base64 se selecionado, senão preservar anexo existente na edição
   if (anexoBase64) {
     data.anexoBase64 = anexoBase64;
     data.anexoNome = anexoNome;
@@ -996,7 +996,7 @@ async function saveVeiculo() {
   setTimeout(() => statusEl.textContent = '', 3000);
 }
 
-// ===== Aﾃ�髭S =====
+// ===== AÇÕES =====
 async function updateMultaStatus(rowIndex, novoStatus) {
   await postApi('updateMultaStatus', { rowIndex, novoStatus });
   loadMultas();
@@ -1019,7 +1019,7 @@ function editVeiculo(placa) {
     document.getElementById('veic-motorista').value = veiculo.motorista || '';
   }
 
-  // Scroll para o formulﾃ｡rio
+  // Scroll para o formulário
   document.getElementById('sec-veiculos').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -1051,7 +1051,7 @@ function autoFillUltimoKm(placa) {
   }
 }
 
-// ===== UTILITﾃヽIOS =====
+// ===== UTILITÁRIOS =====
 function formatNumber(num) {
   if (num === null || num === undefined) return '0';
   return Number(num).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -1086,7 +1086,7 @@ function clearForm(prefix) {
   }
 }
 
-// ===== OCR - EXTRAﾃ�グ DE DADOS DE PDF =====
+// ===== OCR - EXTRAÇÃO DE DADOS DE PDF =====
 const VISION_API_KEY = 'AIzaSyDyVTtNJPx7dYP5j5Dz5VFQXq01KZyfB2k';
 const VISION_API_URL = `https://vision.googleapis.com/v1/images:annotate?key=${VISION_API_KEY}`;
 
@@ -1105,7 +1105,7 @@ async function extractOCRData() {
 
   // Verificar tipo de arquivo
   if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-    statusEl.textContent = 'Formato nﾃ｣o suportado. Use imagem ou PDF.';
+    statusEl.textContent = 'Formato não suportado. Use imagem ou PDF.';
     statusEl.className = 'status-msg status-error';
     return;
   }
@@ -1116,16 +1116,16 @@ async function extractOCRData() {
 
   try {
     const fullText = await extractText(file);
-    console.log('Texto extraﾃｭdo:', fullText);
+    console.log('Texto extraído:', fullText);
 
     // Parsear os dados do texto
     const dadosExtraidos = parseMultaText(fullText);
 
-    // Verificar se jﾃ｡ existe esse auto no sistema
+    // Verificar se já existe esse auto no sistema
     if (dadosExtraidos.auto) {
       const jaExiste = state.multas.some(m => m.auto.toUpperCase() === dadosExtraidos.auto.toUpperCase());
       if (jaExiste) {
-        statusEl.textContent = '笞��� ATENﾃ�グ: Multa jﾃ｡ cadastrada no sistema!';
+        statusEl.textContent = '⚠️ ATENÇÃO: Multa já cadastrada no sistema!';
         statusEl.className = 'status-msg status-error';
         fillMultaForm(dadosExtraidos);
         btn.disabled = false;
@@ -1133,10 +1133,10 @@ async function extractOCRData() {
       }
     }
 
-    // Preencher formulﾃ｡rio
+    // Preencher formulário
     fillMultaForm(dadosExtraidos);
 
-    statusEl.textContent = '笨� Dados extraﾃｭdos! Verifique e complete o formulﾃ｡rio.';
+    statusEl.textContent = '✓ Dados extraídos! Verifique e complete o formulário.';
     statusEl.className = 'status-msg status-saved';
 
   } catch (error) {
@@ -1188,21 +1188,21 @@ function parseMultaText(text) {
     dados.data = `${partes[2]}-${partes[1]}-${partes[0]}`; // Formato YYYY-MM-DD
   }
 
-  // Extrair DATA LIMITE PARA IDENTIFICAﾃ�グ DO CONDUTOR
-  const dataLimiteMatch = text.match(/(?:DATA\s*LIMITE\s*(?:PARA\s*)?IDENTIFICA[ﾃ④][AﾃゾO(?:\s*DO\s*CONDUTOR)?|IDENTIFICA[ﾃ④][AﾃゾO\s*AT[ﾃ右]).*?(\d{2}\/\d{2}\/\d{4})/is);
+  // Extrair DATA LIMITE PARA IDENTIFICAÇÃO DO CONDUTOR
+  const dataLimiteMatch = text.match(/(?:DATA\s*LIMITE\s*(?:PARA\s*)?IDENTIFICA[ÇC][AÃ]O(?:\s*DO\s*CONDUTOR)?|IDENTIFICA[ÇC][AÃ]O\s*AT[ÉE]).*?(\d{2}\/\d{2}\/\d{4})/is);
   if (dataLimiteMatch) {
     const partes = dataLimiteMatch[1].split('/');
     dados.dataLimite = `${partes[2]}-${partes[1]}-${partes[0]}`;
   }
 
-  // Extrair AUTO DE INFRAﾃ�グ (geralmente comeﾃｧa com letras e nﾃｺmeros)
+  // Extrair AUTO DE INFRAÇÃO (geralmente começa com letras e números)
   const autoMatches = [
-    textoNorm.match(/IDENTIFICA[ﾃ④][AﾃゾO\s*DO\s*AUTO\s*DE\s*INFRA[ﾃ④][AﾃゾO.*?([A-Z0-9]{8,})/is),
-    textoNorm.match(/AUTO\s*(?:DE\s*)?(?:INFRA[ﾃ④][AﾃゾO)?\s*(?:N[ﾂｰﾂｺ]?)?\s*:?\s*([A-Z0-9]{6,})/i),
-    textoNorm.match(/N[ﾂｰﾂｺ]?\s*(?:DO\s*)?AIT\s*:?\s*([A-Z0-9]{6,})/i),
+    textoNorm.match(/IDENTIFICA[ÇC][AÃ]O\s*DO\s*AUTO\s*DE\s*INFRA[ÇC][AÃ]O.*?([A-Z0-9]{8,})/is),
+    textoNorm.match(/AUTO\s*(?:DE\s*)?(?:INFRA[ÇC][AÃ]O)?\s*(?:N[°º]?)?\s*:?\s*([A-Z0-9]{6,})/i),
+    textoNorm.match(/N[°º]?\s*(?:DO\s*)?AIT\s*:?\s*([A-Z0-9]{6,})/i),
     textoNorm.match(/AIT\s*:?\s*([A-Z0-9]{6,})/i),
-    textoNorm.match(/IDENTIFICA[ﾃ④][AﾃゾO\s*DO\s*AUTO[^A-Z0-9]*([A-Z0-9]{6,})/i),
-    textoNorm.match(/\b([A-Z]{2}\d{8})\b/i) // Padrﾃ｣o especﾃｭfico MB00121928
+    textoNorm.match(/IDENTIFICA[ÇC][AÃ]O\s*DO\s*AUTO[^A-Z0-9]*([A-Z0-9]{6,})/i),
+    textoNorm.match(/\b([A-Z]{2}\d{8})\b/i) // Padrão específico MB00121928
   ];
 
   for (const match of autoMatches) {
@@ -1229,10 +1229,10 @@ function parseMultaText(text) {
     }
   }
 
-  // Extrair TIPO/DESCRIﾃ�グ DA INFRAﾃ�グ
+  // Extrair TIPO/DESCRIÇÃO DA INFRAÇÃO
   const tipoMatches = [
-    text.match(/DESCRI[CﾃⅩ[AﾃゾO\s*(?:DA\s*)?(?:INFRA[CﾃⅩ[AﾃゾO)?\s*:?\s*([^\n]+)/i),
-    text.match(/INFRA[CﾃⅩ[AﾃゾO\s*:?\s*([^\n]+)/i),
+    text.match(/DESCRI[CÇ][AÃ]O\s*(?:DA\s*)?(?:INFRA[CÇ][AÃ]O)?\s*:?\s*([^\n]+)/i),
+    text.match(/INFRA[CÇ][AÃ]O\s*:?\s*([^\n]+)/i),
     text.match(/TRANSITAR\s+[^\n]+/i),
     text.match(/DIRIGIR\s+[^\n]+/i),
     text.match(/ESTACIONAR\s+[^\n]+/i)
@@ -1258,7 +1258,7 @@ function fillMultaForm(dados) {
     document.getElementById('multa-data').value = dados.data;
   }
 
-  // Veﾃｭculo (tentar selecionar)
+  // Veículo (tentar selecionar)
   if (dados.placa) {
     const selectVeiculo = document.getElementById('multa-veiculo');
     const placaUpper = dados.placa.toUpperCase();
@@ -1271,7 +1271,7 @@ function fillMultaForm(dados) {
     }
   }
 
-  // Auto de infraﾃｧﾃ｣o
+  // Auto de infração
   if (dados.auto) {
     document.getElementById('multa-auto').value = dados.auto;
   }
@@ -1292,7 +1292,7 @@ function fillMultaForm(dados) {
   }
 }
 
-// ===== PWA - INSTALAﾃ�グ E SERVICE WORKER =====
+// ===== PWA - INSTALAÇÃO E SERVICE WORKER =====
 let deferredPrompt;
 
 function initPWA() {
@@ -1323,7 +1323,7 @@ function initPWA() {
       if (!deferredPrompt) return;
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      console.log(`Usuﾃ｡rio escolheu: ${outcome}`);
+      console.log(`Usuário escolheu: ${outcome}`);
       deferredPrompt = null;
       if (banner) banner.style.display = 'none';
     });
@@ -1345,26 +1345,24 @@ function initPWA() {
 function filterTable(input) {
   const table = input.closest('table');
   const tbody = table.querySelector('tbody');
-  const rows = tbody.querySelectorAll('tr');
-  const inputs = table.querySelectorAll('.col-filter');
+  const term = input.value.toLowerCase();
+  const colIdx = parseInt(input.getAttribute('data-col'), 10);
   
+  const rows = tbody.querySelectorAll('tr');
   rows.forEach(row => {
-    let show = true;
-    inputs.forEach(inp => {
-      const colIdx = inp.getAttribute('data-col');
-      const filterVal = inp.value.toLowerCase();
-      if (filterVal) {
-        const cell = row.cells[colIdx];
-        if (cell && !cell.textContent.toLowerCase().includes(filterVal)) {
-          show = false;
-        }
-      }
-    });
-    row.style.display = show ? '' : 'none';
+    if (!row.cells || row.cells.length <= colIdx) return;
+    const cellText = row.cells[colIdx].textContent.toLowerCase();
+    if (cellText.includes(term)) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
   });
 }
 
 function sortTable(th, colIdx) {
+  if(event.target.tagName.toLowerCase() === 'input') return;
+  
   const table = th.closest('table');
   const tbody = table.querySelector('tbody');
   const rows = Array.from(tbody.querySelectorAll('tr'));
@@ -1377,74 +1375,6 @@ function sortTable(th, colIdx) {
   });
   
   tbody.append(...rows);
-}
-
-async function extractOCRDataCRLV() {
-  const fileInput = document.getElementById('veic-crlv-ocr');
-  const statusEl = document.getElementById('statusOcrVeiculo');
-  const btn = document.getElementById('btnExtrairDadosCRLV');
-
-  if (!fileInput.files || fileInput.files.length === 0) {
-    statusEl.textContent = 'Selecione um arquivo primeiro';
-    statusEl.className = 'status-msg status-error';
-    return;
-  }
-
-  const file = fileInput.files[0];
-
-  if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-    statusEl.textContent = 'Formato não suportado. Use imagem ou PDF.';
-    statusEl.className = 'status-msg status-error';
-    return;
-  }
-
-  btn.disabled = true;
-  statusEl.textContent = 'Processando CRLV...';
-  statusEl.className = 'status-msg status-saving';
-
-  try {
-    const fullText = await extractText(file);
-    
-    // Parse aprimorado de CRLV
-    const textClean = fullText.replace(/\n/g, ' ');
-    
-    // Exercício (geralmente o ano mais alto ou próximo a EXERCÍCIO)
-    const exMatch = textClean.match(/EXERC[IÍ]CIO.*?(\d{4})/i);
-    let anoEx = exMatch ? exMatch[1] : '';
-    if (!anoEx) {
-       const years = textClean.match(/(202[0-9])/g);
-       if (years) {
-         anoEx = years.sort().reverse()[0]; // Pega o ano mais alto como exercício
-       }
-    }
-    
-    // Placa
-    const matchPlaca = textClean.match(/[A-Z]{3}-?[0-9][0-9A-Z][0-9]{2}/i);
-    const placa = matchPlaca ? matchPlaca[0].replace('-', '') : '';
-
-    // Ano Fab / Mod
-    const anoFabMatch = textClean.match(/ANO\s*FAB.*?(19\d{2}|20\d{2})/i);
-    const ano = anoFabMatch ? anoFabMatch[1] : '';
-
-    // Modelo
-    const modeloMatch = textClean.match(/MARCA.*?MODELO.*?VERS[AÃ]O\s*([A-Z0-9.\/\-\s]{5,40}?)\s*(ESP[EÉ]CIE|PLACA|CAPACIDADE)/i);
-    let modelo = modeloMatch ? modeloMatch[1].trim() : '';
-
-    if (anoEx) document.getElementById('veic-ano-exercicio').value = anoEx;
-    if (placa) document.getElementById('veic-placa').value = placa;
-    if (ano) document.getElementById('veic-ano').value = ano;
-    if (modelo) document.getElementById('veic-modelo').value = modelo;
-
-    statusEl.textContent = 'Dados extraﾃｭdos!';
-    statusEl.className = 'status-msg status-saved';
-  } catch (err) {
-    console.error(err);
-    statusEl.textContent = 'Erro ao processar';
-    statusEl.className = 'status-msg status-error';
-  } finally {
-    btn.disabled = false;
-    setTimeout(() => statusEl.textContent = '', 3000);
-  }
 }
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -1484,8 +1414,105 @@ async function extractText(file) {
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
     if (!data.responses || !data.responses[0] || !data.responses[0].textAnnotations) {
-      throw new Error('N縊 foi poss咩el extrair texto');
+      throw new Error('Não foi possível extrair texto');
     }
     return data.responses[0].textAnnotations[0].description;
   }
+}
+
+async function extractOCRDataCRLV() {
+  const fileInput = document.getElementById('veic-crlv-ocr');
+  const statusEl = document.getElementById('statusOcrVeiculo');
+  const btn = document.getElementById('btnExtrairDadosCRLV');
+
+  if (!fileInput.files || fileInput.files.length === 0) {
+    statusEl.textContent = 'Selecione um arquivo primeiro';
+    statusEl.className = 'status-msg status-error';
+    return;
+  }
+
+  const file = fileInput.files[0];
+
+  if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+    statusEl.textContent = 'Formato não suportado. Use imagem ou PDF.';
+    statusEl.className = 'status-msg status-error';
+    return;
+  }
+
+  btn.disabled = true;
+  statusEl.textContent = 'Processando CRLV...';
+  statusEl.className = 'status-msg status-saving';
+
+  try {
+    const fullText = await extractText(file);
+    const textClean = fullText.replace(/\n/g, ' ');
+    
+    const exMatch = textClean.match(/EXERC[IÍ]CIO.*?(\d{4})/i);
+    let anoEx = exMatch ? exMatch[1] : '';
+    if (!anoEx) {
+       const years = textClean.match(/(202[0-9])/g);
+       if (years) { anoEx = years.sort().reverse()[0]; }
+    }
+    
+    const matchPlaca = textClean.match(/[A-Z]{3}-?[0-9][0-9A-Z][0-9]{2}/i);
+    const placa = matchPlaca ? matchPlaca[0].replace('-', '') : '';
+
+    const anoFabMatch = textClean.match(/ANO\s*FAB.*?(19\d{2}|20\d{2})/i);
+    const ano = anoFabMatch ? anoFabMatch[1] : '';
+
+    const modeloMatch = textClean.match(/MARCA.*?MODELO.*?VERS[AÃ]O\s*([A-Z0-9.\/\-\s]{5,40}?)\s*(ESP[EÉ]CIE|PLACA|CAPACIDADE)/i);
+    let modelo = modeloMatch ? modeloMatch[1].trim() : '';
+
+    if (anoEx) document.getElementById('veic-ano-exercicio').value = anoEx;
+    if (placa) document.getElementById('veic-placa').value = placa;
+    if (ano) document.getElementById('veic-ano').value = ano;
+    if (modelo) document.getElementById('veic-modelo').value = modelo;
+
+    statusEl.textContent = 'Dados extraídos com sucesso!';
+    statusEl.className = 'status-msg status-saved';
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = 'Erro ao processar';
+    statusEl.className = 'status-msg status-error';
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => statusEl.textContent = '', 3000);
+  }
+}
+
+function filterTable(input) {
+  const table = input.closest('table');
+  const tbody = table.querySelector('tbody');
+  const rows = tbody.querySelectorAll('tr');
+  const inputs = table.querySelectorAll('.col-filter');
+  
+  rows.forEach(row => {
+    let show = true;
+    inputs.forEach(inp => {
+      const colIdx = inp.getAttribute('data-col');
+      const filterVal = inp.value.toLowerCase();
+      if (filterVal) {
+        const cell = row.cells[colIdx];
+        if (cell && !cell.textContent.toLowerCase().includes(filterVal)) {
+          show = false;
+        }
+      }
+    });
+    row.style.display = show ? '' : 'none';
+  });
+}
+
+function sortTable(th, colIdx) {
+  const table = th.closest('table');
+  const tbody = table.querySelector('tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  const isAsc = th.classList.toggle('asc');
+  
+  rows.sort((a, b) => {
+    const aVal = a.cells[colIdx].textContent.trim();
+    const bVal = b.cells[colIdx].textContent.trim();
+    return isAsc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+  });
+  
+  tbody.append(...rows);
 }
