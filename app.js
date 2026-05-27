@@ -1447,21 +1447,33 @@ async function extractOCRDataCRLV() {
     const fullText = await extractText(file);
     const textClean = fullText.replace(/\n/g, ' ');
     
-    const exMatch = textClean.match(/EXERC[IÍ]CIO.*?(\d{4})/i);
-    let anoEx = exMatch ? exMatch[1] : '';
-    if (!anoEx) {
-       const years = textClean.match(/(202[0-9])/g);
-       if (years) { anoEx = years.sort().reverse()[0]; }
-    }
-    
+    // Placa
     const matchPlaca = textClean.match(/[A-Z]{3}-?[0-9][0-9A-Z][0-9]{2}/i);
     const placa = matchPlaca ? matchPlaca[0].replace('-', '') : '';
 
-    const anoFabMatch = textClean.match(/ANO\s*FAB.*?(19\d{2}|20\d{2})/i);
-    const ano = anoFabMatch ? anoFabMatch[1] : '';
+    // Ano Fab / Mod (procura dois anos juntos, ex: 2001 2002 ou 2001/2002)
+    let ano = '';
+    const matchAnos = textClean.match(/\b(19\d{2}|20[0-2]\d)\b\s*(?:\/|-)?\s*\b(19\d{2}|20[0-2]\d)\b/);
+    if (matchAnos) {
+      ano = matchAnos[1] === matchAnos[2] ? matchAnos[1] : `${matchAnos[1]}/${matchAnos[2]}`;
+    }
 
-    const modeloMatch = textClean.match(/MARCA.*?MODELO.*?VERS[AÃ]O\s*([A-Z0-9.\/\-\s]{5,40}?)\s*(ESP[EÉ]CIE|PLACA|CAPACIDADE)/i);
-    let modelo = modeloMatch ? modeloMatch[1].trim() : '';
+    // Exercício (o ano atual/maior ano começando com 202x)
+    let anoEx = '';
+    const matchExercicio = textClean.match(/EXERC[IÍ]CIO\D*?(202\d)/i);
+    if (matchExercicio) {
+      anoEx = matchExercicio[1];
+    } else {
+      const anosEx = textClean.match(/\b(202\d)\b/g);
+      if (anosEx) anoEx = anosEx.sort().reverse()[0];
+    }
+
+    // Modelo (pega tudo após MARCA/MODELO/VERSÃO até ESPÉCIE ou similar, garantindo que não pegue anos soltos)
+    let modelo = '';
+    const modeloMatch = textClean.match(/MARCA\s*\/?\s*MODELO\s*\/?\s*VERS[AÃ]O\D*?([A-Z0-9.\/\-\s]{5,50}?)\s+(ESP[EÉ]CIE|MISTO|PLACA|COR|CAPACIDADE)/i);
+    if (modeloMatch) {
+      modelo = modeloMatch[1].trim();
+    }
 
     if (anoEx) document.getElementById('veic-ano-exercicio').value = anoEx;
     if (placa) document.getElementById('veic-placa').value = placa;
