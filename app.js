@@ -1360,3 +1360,39 @@ function initPWA() {
   });
 }
 
+function filterTable(input) {
+  const table = input.closest('table');
+  const tbody = table.querySelector('tbody');
+  const rows = tbody.querySelectorAll('tr');
+  const inputs = table.querySelectorAll('.col-filter');
+  
+  rows.forEach(row => {
+    let show = true;
+    inputs.forEach(inp => {
+      const colIdx = inp.getAttribute('data-col');
+      const filterVal = inp.value.toLowerCase();
+      if (filterVal) {
+        const cell = row.cells[colIdx];
+        if (cell && !cell.textContent.toLowerCase().includes(filterVal)) {
+          show = false;
+        }
+      }
+    });
+    row.style.display = show ? '' : 'none';
+  });
+}
+
+function sortTable(th, colIdx) {
+  const table = th.closest('table');
+  const tbody = table.querySelector('tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  const isAsc = th.classList.toggle('asc');
+  
+  rows.sort((a, b) => {
+    const aVal = a.cells[colIdx].textContent.trim();
+    const bVal = b.cells[colIdx].textContent.trim();
+    return isAsc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+  });
+  
+  tbody.append(...rows);
+}

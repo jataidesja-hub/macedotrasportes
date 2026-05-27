@@ -161,15 +161,15 @@
         <table id="tabelaMultas">
           <thead>
             <tr>
-              <th>Data</th>
-              <th>Veículo</th>
-              <th>Motorista</th>
-              <th>Tipo de Multa</th>
-              <th>Auto da infração</th>
+              <th style="cursor:pointer" onclick="sortTable(this, 0)">Data <br><input type="text" style="width:100%; font-size:11px; padding:2px" class="col-filter" data-col="0" placeholder="Filtrar" onclick="event.stopPropagation()" oninput="filterTable(this)"></th>
+              <th style="cursor:pointer" onclick="sortTable(this, 1)">Veículo <br><input type="text" style="width:100%; font-size:11px; padding:2px" class="col-filter" data-col="1" placeholder="Filtrar" onclick="event.stopPropagation()" oninput="filterTable(this)"></th>
+              <th style="cursor:pointer" onclick="sortTable(this, 2)">Motorista <br><input type="text" style="width:100%; font-size:11px; padding:2px" class="col-filter" data-col="2" placeholder="Filtrar" onclick="event.stopPropagation()" oninput="filterTable(this)"></th>
+              <th style="cursor:pointer" onclick="sortTable(this, 3)">Tipo de Multa <br><input type="text" style="width:100%; font-size:11px; padding:2px" class="col-filter" data-col="3" placeholder="Filtrar" onclick="event.stopPropagation()" oninput="filterTable(this)"></th>
+              <th style="cursor:pointer" onclick="sortTable(this, 4)">Auto <br><input type="text" style="width:100%; font-size:11px; padding:2px" class="col-filter" data-col="4" placeholder="Filtrar" onclick="event.stopPropagation()" oninput="filterTable(this)"></th>
               <th>Anexo</th>
-              <th>Valor (R$)</th>
-              <th>Status</th>
-              <th>Data Limite Condutor</th>
+              <th style="cursor:pointer" onclick="sortTable(this, 6)">Valor <br><input type="text" style="width:100%; font-size:11px; padding:2px" class="col-filter" data-col="6" placeholder="Filtrar" onclick="event.stopPropagation()" oninput="filterTable(this)"></th>
+              <th style="cursor:pointer" onclick="sortTable(this, 7)">Status <br><input type="text" style="width:100%; font-size:11px; padding:2px" class="col-filter" data-col="7" placeholder="Filtrar" onclick="event.stopPropagation()" oninput="filterTable(this)"></th>
+              <th style="cursor:pointer" onclick="sortTable(this, 8)">Data Limite <br><input type="text" style="width:100%; font-size:11px; padding:2px" class="col-filter" data-col="8" placeholder="Filtrar" onclick="event.stopPropagation()" oninput="filterTable(this)"></th>
               <th>Ações</th>
             </tr>
           </thead>
