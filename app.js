@@ -1451,26 +1451,26 @@ async function extractOCRDataCRLV() {
     const matchPlaca = textClean.match(/[A-Z]{3}-?[0-9][0-9A-Z][0-9]{2}/i);
     const placa = matchPlaca ? matchPlaca[0].replace('-', '') : '';
 
-    // Ano Fab / Mod (procura dois anos juntos, ex: 2001 2002 ou 2001/2002)
+    // Ano Fab / Mod
     let ano = '';
-    const matchAnos = textClean.match(/\b(19\d{2}|20[0-2]\d)\b\s*(?:\/|-)?\s*\b(19\d{2}|20[0-2]\d)\b/);
+    const matchAnos = textClean.match(/ANO\s*FAB.{0,50}?(19\d{2}|20[0-2]\d).{0,30}?(19\d{2}|20[0-2]\d)/i);
     if (matchAnos) {
       ano = matchAnos[1] === matchAnos[2] ? matchAnos[1] : `${matchAnos[1]}/${matchAnos[2]}`;
     }
 
-    // Exercício (o ano atual/maior ano começando com 202x)
+    // Exercício
     let anoEx = '';
-    const matchExercicio = textClean.match(/EXERC[IÍ]CIO\D*?(202\d)/i);
+    const matchExercicio = textClean.match(/EXERC[IÍ]CIO.{0,50}?(202\d)/i);
     if (matchExercicio) {
       anoEx = matchExercicio[1];
     } else {
       const anosEx = textClean.match(/\b(202\d)\b/g);
-      if (anosEx) anoEx = anosEx.sort().reverse()[0];
+      if (anosEx) anoEx = anosEx.sort()[0]; // pega o menor 202x, evitando a data de emissão 2026+
     }
 
-    // Modelo (pega tudo após MARCA/MODELO/VERSÃO até ESPÉCIE ou similar, garantindo que não pegue anos soltos)
+    // Modelo
     let modelo = '';
-    const modeloMatch = textClean.match(/MARCA\s*\/?\s*MODELO\s*\/?\s*VERS[AÃ]O\D*?([A-Z0-9.\/\-\s]{5,50}?)\s+(ESP[EÉ]CIE|MISTO|PLACA|COR|CAPACIDADE)/i);
+    const modeloMatch = textClean.match(/MARCA\s*\/\s*MODELO\s*\/\s*VERS[AÃ]O\s*(.{5,80}?)\s*ESP[EÉ]CIE/i);
     if (modeloMatch) {
       modelo = modeloMatch[1].trim();
     }
