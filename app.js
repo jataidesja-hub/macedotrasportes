@@ -119,6 +119,17 @@ function initForms() {
   // Veículos
   document.getElementById('btnSalvarVeiculo').addEventListener('click', saveVeiculo);
   document.getElementById('btnExtrairDadosCRLV').addEventListener('click', extractOCRDataCRLV);
+
+  // Gatilhos automáticos para OCR ao selecionar arquivo
+  document.getElementById('multa-pdf-ocr').addEventListener('change', extractOCRData);
+  document.getElementById('veic-crlv-ocr').addEventListener('change', extractOCRDataCRLV);
+  document.getElementById('veic-crlv').addEventListener('change', function() {
+    const ocrInput = document.getElementById('veic-crlv-ocr');
+    if(this.files && this.files.length > 0) {
+      ocrInput.files = this.files;
+      extractOCRDataCRLV();
+    }
+  });
 }
 
 // ===== LOADING =====
