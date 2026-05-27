@@ -1451,28 +1451,31 @@ async function extractOCRDataCRLV() {
     const matchPlaca = textClean.match(/[A-Z]{3}-?[0-9][0-9A-Z][0-9]{2}/i);
     const placa = matchPlaca ? matchPlaca[0].replace('-', '') : '';
 
-    // Ano Fab / Mod
+    // Anos: Fabricação, Modelo e Exercício
     let ano = '';
-    const matchAnos = textClean.match(/ANO\s*FAB.{0,50}?(19\d{2}|20[0-2]\d).{0,30}?(19\d{2}|20[0-2]\d)/i);
-    if (matchAnos) {
-      ano = matchAnos[1] === matchAnos[2] ? matchAnos[1] : `${matchAnos[1]}/${matchAnos[2]}`;
-    }
-
-    // Exercício
     let anoEx = '';
-    const matchExercicio = textClean.match(/EXERC[IÍ]CIO.{0,50}?(202\d)/i);
-    if (matchExercicio) {
-      anoEx = matchExercicio[1];
-    } else {
-      const anosEx = textClean.match(/\b(202\d)\b/g);
-      if (anosEx) anoEx = anosEx.sort()[0]; // pega o menor 202x, evitando a data de emissão 2026+
+    const allYearsMatch = textClean.match(/\b(19[5-9]\d|20[0-3]\d)\b/g);
+    
+    if (allYearsMatch) {
+      const allYears = allYearsMatch.map(Number).sort((a,b) => a - b);
+      if (allYears.length >= 2) {
+        const fab = allYears[0];
+        const mod = allYears[1];
+        ano = fab === mod ? `${fab}` : `${fab}/${mod}`;
+      }
+      
+      const exCandidates = allYears.filter(y => y >= 2020);
+      if (exCandidates.length > 0) {
+        anoEx = exCandidates.length > 1 ? exCandidates[exCandidates.length - 2] : exCandidates[0];
+      }
     }
 
-    // Modelo
+    // Modelo: Busca padrão MARCA/MODELO (ex: I/TOYOTA HILUX SW4 D)
     let modelo = '';
-    const modeloMatch = textClean.match(/MARCA\s*\/\s*MODELO\s*\/\s*VERS[AÃ]O\s*(.{5,80}?)\s*ESP[EÉ]CIE/i);
+    const modeloMatch = textClean.match(/\b([A-Z]{1,20}\/[A-Z0-9][A-Z0-9\s.-]{2,40})\b/);
     if (modeloMatch) {
       modelo = modeloMatch[1].trim();
+      modelo = modelo.replace(/\s+(ESP[EÉ]CIE|MISTO|PLACA|COR|CHASSI|RENAVAM|CATEGORIA|PASSAGEIRO|CARGA).*$/i, '');
     }
 
     if (anoEx) document.getElementById('veic-ano-exercicio').value = anoEx;
