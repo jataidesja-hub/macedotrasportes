@@ -342,10 +342,23 @@
     <!-- Seção Veículos -->
     <section id="sec-veiculos" class="secao" style="display:none">
       <h2>Veículos</h2>
+
+      <!-- OCR Box CRLV -->
+      <div class="ocr-box">
+        <h3>📄 Leitura Automática do CRLV</h3>
+        <p>Faça upload do documento para extrair placa, ano e exercício automaticamente</p>
+        <div class="ocr-upload">
+          <input type="file" id="veic-crlv-ocr" accept="image/*,application/pdf">
+          <button id="btnExtrairDadosCRLV" type="button">🔍 Extrair Dados CRLV</button>
+          <span id="statusOcrVeiculo" class="status-msg"></span>
+        </div>
+      </div>
+
       <div class="form-grid">
         <label>Placa<input type="text" id="veic-placa"></label>
         <label>Modelo<input type="text" id="veic-modelo"></label>
-        <label>Ano<input type="number" id="veic-ano"></label>
+        <label>Ano Fab./Mod.<input type="number" id="veic-ano"></label>
+        <label>Ano Exercício CRLV<input type="number" id="veic-ano-exercicio"></label>
         <label>Status
           <select id="veic-status">
             <option value="Ativo">Ativo</option>
@@ -360,13 +373,14 @@
         <button id="btnSalvarVeiculo">Salvar veículo</button>
         <span id="statusVeiculo" class="status-msg"></span>
       </div>
-      <div class="table-container">
-        <table id="tabelaVeiculos">
+      <div class="table-container mobile-cards-container">
+        <table id="tabelaVeiculos" class="mobile-table">
           <thead>
             <tr>
               <th>Placa</th>
               <th>Modelo</th>
               <th>Ano</th>
+              <th>Exercício</th>
               <th>Status</th>
               <th>CRLV</th>
               <th>Motorista</th>

@@ -118,6 +118,7 @@ function initForms() {
   document.getElementById('btnSalvarMotorista').addEventListener('click', saveMotorista);
   // Veículos
   document.getElementById('btnSalvarVeiculo').addEventListener('click', saveVeiculo);
+  document.getElementById('btnExtrairDadosCRLV').addEventListener('click', extractOCRDataCRLV);
 }
 
 // ===== LOADING =====
@@ -576,7 +577,7 @@ function renderVeiculos() {
   const data = state.veiculosLista || [];
 
   if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">Nenhum veículo cadastrado</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">Nenhum veículo cadastrado</td></tr>';
     return;
   }
 
@@ -585,13 +586,14 @@ function renderVeiculos() {
     const statusClass = statusText.toLowerCase().replace(/ç/g, 'c').replace(/ã/g, 'a');
     return `
     <tr>
-      <td>${v.placa || ''}</td>
-      <td>${v.modelo || ''}</td>
-      <td>${v.ano || ''}</td>
-      <td><span class="badge badge-${statusClass}">${statusText}</span></td>
-      <td>${v.clrv ? `<a href="${v.clrv}" target="_blank" class="link-anexo">Ver CRLV</a>` : '-'}</td>
-      <td>${v.motorista || '-'}</td>
-      <td>
+      <td data-label="Placa">${v.placa || ''}</td>
+      <td data-label="Modelo">${v.modelo || ''}</td>
+      <td data-label="Ano">${v.ano || ''}</td>
+      <td data-label="Exercício">${v.anoExercicio || '-'}</td>
+      <td data-label="Status"><span class="badge badge-${statusClass}">${statusText}</span></td>
+      <td data-label="CRLV">${v.clrv ? `<a href="${v.clrv}" target="_blank" class="link-anexo">Ver CRLV</a>` : '-'}</td>
+      <td data-label="Motorista">${v.motorista || '-'}</td>
+      <td data-label="Ações">
         <button class="btn-small btn-edit" onclick="editVeiculo('${v.placa}')">Editar</button>
       </td>
     </tr>
@@ -961,6 +963,7 @@ async function saveVeiculo() {
     placa: document.getElementById('veic-placa').value,
     modelo: document.getElementById('veic-modelo').value,
     ano: document.getElementById('veic-ano').value,
+    anoExercicio: document.getElementById('veic-ano-exercicio').value,
     status: document.getElementById('veic-status').value,
     motorista: document.getElementById('veic-motorista').value,
     clrv: '' // TODO: Upload de arquivo
@@ -1395,4 +1398,70 @@ function sortTable(th, colIdx) {
   });
   
   tbody.append(...rows);
+}
+
+async function extractOCRDataCRLV() {
+  const fileInput = document.getElementById('veic-crlv-ocr');
+  const statusEl = document.getElementById('statusOcrVeiculo');
+  const btn = document.getElementById('btnExtrairDadosCRLV');
+
+  if (!fileInput.files || fileInput.files.length === 0) {
+    statusEl.textContent = 'Selecione um arquivo primeiro';
+    statusEl.className = 'status-msg status-error';
+    return;
+  }
+
+  const file = fileInput.files[0];
+
+  if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+    statusEl.textContent = 'Formato não suportado. Use imagem ou PDF.';
+    statusEl.className = 'status-msg status-error';
+    return;
+  }
+
+  btn.disabled = true;
+  statusEl.textContent = 'Processando CRLV...';
+  statusEl.className = 'status-msg status-saving';
+
+  try {
+    const base64 = await fileToBase64(file);
+    const response = await fetch(VISION_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [{
+          image: { content: base64 },
+          features: [{ type: 'TEXT_DETECTION', maxResults: 1 }]
+        }]
+      })
+    });
+
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message);
+    if (!data.responses || !data.responses[0] || !data.responses[0].textAnnotations) {
+      throw new Error('Não foi possível extrair texto do CRLV');
+    }
+
+    const fullText = data.responses[0].textAnnotations[0].description;
+    
+    // Parse básico de CRLV
+    const matchExercicio = fullText.match(/EXERC[IÍ]CIO\s*(\d{4})/i) || fullText.match(/(?:20\d{2})/g);
+    const anoEx = matchExercicio ? (matchExercicio[1] || matchExercicio[0]) : '';
+    
+    const matchPlaca = fullText.match(/[A-Z]{3}-?[0-9][0-9A-Z][0-9]{2}/i);
+    const placa = matchPlaca ? matchPlaca[0].replace('-', '') : '';
+
+    if (anoEx) document.getElementById('veic-ano-exercicio').value = anoEx;
+    if (placa) document.getElementById('veic-placa').value = placa;
+
+    statusEl.textContent = 'Dados extraídos!';
+    statusEl.className = 'status-msg status-saved';
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = 'Erro ao processar';
+    statusEl.className = 'status-msg status-error';
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => statusEl.textContent = '', 3000);
+  }
 }
