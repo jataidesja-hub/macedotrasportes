@@ -1115,39 +1115,7 @@ async function extractOCRData() {
   statusEl.className = 'status-msg status-saving';
 
   try {
-    // Converter arquivo para base64
-    const base64 = await fileToBase64(file);
-
-    // Chamar Vision API
-    const response = await fetch(VISION_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        requests: [{
-          image: {
-            content: base64
-          },
-          features: [{
-            type: 'TEXT_DETECTION',
-            maxResults: 1
-          }]
-        }]
-      })
-    });
-
-    const data = await response.json();
-
-    if (data.error) {
-      throw new Error(data.error.message);
-    }
-
-    if (!data.responses || !data.responses[0] || !data.responses[0].textAnnotations) {
-      throw new Error('Não foi possível extrair texto do documento');
-    }
-
-    const fullText = data.responses[0].textAnnotations[0].description;
+    const fullText = await extractText(file);
     console.log('Texto extraído:', fullText);
 
     // Parsear os dados do texto
@@ -1435,25 +1403,7 @@ async function extractOCRDataCRLV() {
   statusEl.className = 'status-msg status-saving';
 
   try {
-    const base64 = await fileToBase64(file);
-    const response = await fetch(VISION_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        requests: [{
-          image: { content: base64 },
-          features: [{ type: 'TEXT_DETECTION', maxResults: 1 }]
-        }]
-      })
-    });
-
-    const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
-    if (!data.responses || !data.responses[0] || !data.responses[0].textAnnotations) {
-      throw new Error('Não foi possível extrair texto do CRLV');
-    }
-
-    const fullText = data.responses[0].textAnnotations[0].description;
+    const fullText = await extractText(file);
     
     // Parse básico de CRLV
     const matchExercicio = fullText.match(/EXERC[IÍ]CIO\s*(\d{4})/i) || fullText.match(/(?:20\d{2})/g);
@@ -1474,5 +1424,48 @@ async function extractOCRDataCRLV() {
   } finally {
     btn.disabled = false;
     setTimeout(() => statusEl.textContent = '', 3000);
+  }
+}
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+async function extractText(file) {
+  if (file.type === 'application/pdf') {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async function() {
+        try {
+          const typedarray = new Uint8Array(this.result);
+          const pdf = await pdfjsLib.getDocument(typedarray).promise;
+          let fullText = '';
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            fullText += textContent.items.map(item => item.str).join(' ') + ' ';
+          }
+          resolve(fullText);
+        } catch (e) { reject(e); }
+      };
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+  } else {
+    const base64 = await fileToBase64(file);
+    const response = await fetch(VISION_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [{
+          image: { content: base64 },
+          features: [{ type: 'TEXT_DETECTION', maxResults: 1 }]
+        }]
+      })
+    });
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message);
+    if (!data.responses || !data.responses[0] || !data.responses[0].textAnnotations) {
+      throw new Error('N�o foi poss�vel extrair texto');
+    }
+    return data.responses[0].textAnnotations[0].description;
   }
 }
