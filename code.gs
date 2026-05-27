@@ -148,9 +148,9 @@ function criarPlanilha() {
     'Auto da infração', 'Anexo (link)', 'Valor', 'Status', 'Data Limite Condutor'
   ]]).setFontWeight('bold');
   multasSheet.setFrozenRows(1);
-  multasSheet.getRange('A:A').setNumberFormat('dd/MM/yyyy');
-  multasSheet.getRange('G:G').setNumberFormat('R$ #,##0.00');
-  multasSheet.getRange('I:I').setNumberFormat('dd/MM/yyyy');
+  try { multasSheet.getRange('A:A').setNumberFormat('dd/MM/yyyy'); } catch(e){}
+  try { multasSheet.getRange('G:G').setNumberFormat('R$ #,##0.00'); } catch(e){}
+  try { multasSheet.getRange('I:I').setNumberFormat('dd/MM/yyyy'); } catch(e){}
 
   // === ABASTECIMENTOS ===
   let abastecimentosSheet = ss.getSheetByName('Abastecimentos');
@@ -162,10 +162,10 @@ function criarPlanilha() {
     'Data', 'Veículo', 'Motorista', 'Km atual', 'Quantidade (litros)', 'Valor (R$)'
   ]]).setFontWeight('bold');
   abastecimentosSheet.setFrozenRows(1);
-  abastecimentosSheet.getRange('A:A').setNumberFormat('dd/MM/yyyy');
-  abastecimentosSheet.getRange('D:D').setNumberFormat('#,##0');
-  abastecimentosSheet.getRange('E:E').setNumberFormat('#,##0.00');
-  abastecimentosSheet.getRange('F:F').setNumberFormat('R$ #,##0.00');
+  try { abastecimentosSheet.getRange('A:A').setNumberFormat('dd/MM/yyyy'); } catch(e){}
+  try { abastecimentosSheet.getRange('D:D').setNumberFormat('#,##0'); } catch(e){}
+  try { abastecimentosSheet.getRange('E:E').setNumberFormat('#,##0.00'); } catch(e){}
+  try { abastecimentosSheet.getRange('F:F').setNumberFormat('R$ #,##0.00'); } catch(e){}
 
   // === DANOS ===
   let danosSheet = ss.getSheetByName('Danos');
@@ -177,7 +177,7 @@ function criarPlanilha() {
     'Data', 'Veículo', 'Motorista', 'Descrição do dano', 'Status'
   ]]).setFontWeight('bold');
   danosSheet.setFrozenRows(1);
-  danosSheet.getRange('A:A').setNumberFormat('dd/MM/yyyy');
+  try { danosSheet.getRange('A:A').setNumberFormat('dd/MM/yyyy'); } catch(e){}
 
   // === VEÍCULOS ===
   let veiculosSheet = ss.getSheetByName('Veículos');
@@ -189,7 +189,7 @@ function criarPlanilha() {
     'Placa', 'Modelo', 'Ano', 'Status', 'Anexo CLRV', 'Motorista', 'Exercício'
   ]]).setFontWeight('bold');
   veiculosSheet.setFrozenRows(1);
-  veiculosSheet.getRange('C:C').setNumberFormat('0000');
+  try { veiculosSheet.getRange('C:C').setNumberFormat('0000'); } catch(e){}
 
   // === MOTORISTAS ===
   let motoristasSheet = ss.getSheetByName('Motoristas');
@@ -201,7 +201,7 @@ function criarPlanilha() {
     'Nome', 'CPF', 'CNH', 'Categoria', 'Validade CNH', 'Status'
   ]]).setFontWeight('bold');
   motoristasSheet.setFrozenRows(1);
-  motoristasSheet.getRange('E:E').setNumberFormat('dd/MM/yyyy');
+  try { motoristasSheet.getRange('E:E').setNumberFormat('dd/MM/yyyy'); } catch(e){}
 
   // === TROCA DE ÓLEO ===
   let oleoSheet = ss.getSheetByName('TrocaDeOleo');
@@ -213,8 +213,8 @@ function criarPlanilha() {
     'Data', 'Veículo', 'Motorista', 'Km na Troca', 'Intervalo (Km)', 'Próxima Troca (Km)', 'Observações'
   ]]).setFontWeight('bold');
   oleoSheet.setFrozenRows(1);
-  oleoSheet.getRange('A:A').setNumberFormat('dd/MM/yyyy');
-  oleoSheet.getRange('D:F').setNumberFormat('#,##0');
+  try { oleoSheet.getRange('A:A').setNumberFormat('dd/MM/yyyy'); } catch(e){}
+  try { oleoSheet.getRange('D:F').setNumberFormat('#,##0'); } catch(e){}
 }
 
 /* UI */
