@@ -185,8 +185,8 @@ function criarPlanilha() {
     veiculosSheet = ss.insertSheet('Veículos');
   }
   veiculosSheet.clear();
-  veiculosSheet.getRange(1, 1, 1, 6).setValues([[
-    'Placa', 'Modelo', 'Ano', 'Status', 'Anexo CLRV', 'Motorista'
+  veiculosSheet.getRange(1, 1, 1, 7).setValues([[
+    'Placa', 'Modelo', 'Ano', 'Status', 'Anexo CLRV', 'Motorista', 'Exercício'
   ]]).setFontWeight('bold');
   veiculosSheet.setFrozenRows(1);
   veiculosSheet.getRange('C:C').setNumberFormat('0000');
@@ -303,7 +303,9 @@ function getDadosVeiculos() {
   if (!sh) return [];
   const lastRow = sh.getLastRow();
   if (lastRow < 2) return [];
-  const values = sh.getRange(2, 1, lastRow - 1, 6).getValues();
+  const lastCol = sh.getLastColumn();
+  const numCols = Math.max(7, lastCol);
+  const values = sh.getRange(2, 1, lastRow - 1, numCols).getValues();
 
   const resultado = [];
   for (let i = 0; i < values.length; i++) {
@@ -315,6 +317,7 @@ function getDadosVeiculos() {
       status: r[3] || '',
       clrv: r[4] || '',
       motorista: r[5] || '',
+      anoExercicio: r[6] || '',
       rowIndex: i + 2
     });
   }
@@ -791,6 +794,7 @@ function adicionarVeiculo(dados) {
        sh.getRange(rowIndex, 5).setValue(dados.clrv);
     }
     sh.getRange(rowIndex, 6).setValue(dados.motorista || '');
+    sh.getRange(rowIndex, 7).setValue(dados.anoExercicio || '');
   } else {
     sh.appendRow([
       dados.placa,
@@ -798,7 +802,8 @@ function adicionarVeiculo(dados) {
       dados.ano,
       dados.status,
       dados.clrv || '',
-      dados.motorista || ''
+      dados.motorista || '',
+      dados.anoExercicio || ''
     ]);
   }
 }
