@@ -893,3 +893,14 @@ tr.editing-row td select {
   .btn-filtro-apply, .btn-filtro-clear { width: 100%; }
 }
 
+/* ===== ANIMATIONS & VALIDATION ===== */
+@keyframes blinkRed {
+  0% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.4); border-color: var(--danger); background-color: #fef2f2; }
+  50% { box-shadow: 0 0 0 0 transparent; border-color: var(--border); background-color: #fff; }
+  100% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.4); border-color: var(--danger); background-color: #fef2f2; }
+}
+.error-blink {
+  animation: blinkRed 1s ease-in-out infinite !important;
+  border-color: var(--danger) !important;
+  color: var(--danger) !important;
+}

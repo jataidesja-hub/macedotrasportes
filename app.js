@@ -185,6 +185,7 @@ function initForms() {
   document.getElementById('btnExtrairDadosCRLV').addEventListener('click', extractOCRDataCRLV);
 
   // Gatilhos automáticos
+  document.getElementById('abast-km').addEventListener('blur', validarKmAbastecimento);
   document.getElementById('multa-pdf-ocr').addEventListener('change', extractOCRData);
   document.getElementById('veic-crlv-ocr').addEventListener('change', extractOCRDataCRLV);
   document.getElementById('veic-crlv').addEventListener('change', function() {
@@ -194,6 +195,33 @@ function initForms() {
       extractOCRDataCRLV();
     }
   });
+}
+
+function validarKmAbastecimento() {
+  const inputKm = document.getElementById('abast-km');
+  const kmValue = Number(inputKm.value);
+  const veiculo = document.getElementById('abast-veiculo').value;
+  
+  inputKm.classList.remove('error-blink');
+  
+  if (veiculo && kmValue > 0) {
+    const abastVeiculo = (state.abastecimentos || []).filter(a => a.veiculo === veiculo);
+    if (abastVeiculo.length > 0) {
+      const sorted = abastVeiculo.sort((a, b) => {
+        const d1 = (a.data||'').split('/').reverse().join('');
+        const d2 = (b.data||'').split('/').reverse().join('');
+        return d2.localeCompare(d1); // Descendente
+      });
+      const ultimoKm = Number(sorted[0].km) || 0;
+      
+      // Validação: menor que o último, ou pulo maior que 2000km
+      if (kmValue < ultimoKm || (kmValue - ultimoKm > 2000)) {
+        inputKm.classList.add('error-blink');
+        return { valido: false, ultimoKm };
+      }
+    }
+  }
+  return { valido: true };
 }
 
 // ===== LOADING =====
@@ -1005,6 +1033,17 @@ async function saveAbastecimento() {
     litros: document.getElementById('abast-litros').value,
     valor: document.getElementById('abast-valor').value
   };
+
+  const validacao = validarKmAbastecimento();
+  if (!validacao.valido) {
+    const confirmSave = confirm(`⚠️ ATENÇÃO: O KM informado (${data.km}) parece estar incorreto.\n\nO último KM registrado para este veículo foi ${validacao.ultimoKm}.\n\nDeseja salvar mesmo assim?`);
+    if (!confirmSave) {
+      statusEl.textContent = 'Cancelado pelo usuário';
+      statusEl.className = 'status-msg status-error';
+      setTimeout(() => statusEl.textContent = '', 3000);
+      return;
+    }
+  }
 
   const result = await postApi('addAbastecimento', data);
 
