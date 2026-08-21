@@ -61,45 +61,109 @@ function initTabs() {
 
 // ===== FILTROS =====
 function initFilters() {
-  document.getElementById('btnAplicarFiltros').addEventListener('click', applyFilters);
-  document.getElementById('btnLimparFiltros').addEventListener('click', clearFilters);
+  // Filtros movidos para dentro de cada seção (inline)
+  populateSectionFilters();
+}
+
+function populateSectionFilters() {
+  // Será chamada depois que os dados forem carregados
 }
 
 function applyFilters() {
-  state.filtroVeiculo = document.getElementById('filtroVeiculoGlobal').value;
-  state.filtroMotorista = document.getElementById('filtroMotoristaGlobal').value;
-  state.filtroStatus = document.getElementById('filtroStatusGlobal').value;
-  state.filtroBusca = document.getElementById('filtroBuscaGlobal').value.toLowerCase();
-  state.filtroMesInicio = document.getElementById('filtroMesInicio').value;
-  state.filtroMesFim = document.getElementById('filtroMesFim').value;
-
-  if (state.activeTab === 'dashboard') {
-    loadDashboardData();
-  }
-
+  // Mantido para compatibilidade com dashboard/indicadores
   renderAllTables();
   loadIndicadores();
   loadConsumo();
 }
 
 function clearFilters() {
-  document.getElementById('filtroVeiculoGlobal').value = '';
-  document.getElementById('filtroMotoristaGlobal').value = '';
-  document.getElementById('filtroStatusGlobal').value = '';
-  document.getElementById('filtroBuscaGlobal').value = '';
-  document.getElementById('filtroMesInicio').value = '';
-  document.getElementById('filtroMesFim').value = '';
-
   state.filtroVeiculo = '';
   state.filtroMotorista = '';
   state.filtroStatus = '';
   state.filtroBusca = '';
   state.filtroMesInicio = '';
   state.filtroMesFim = '';
-
   renderAllTables();
   loadIndicadores();
   loadConsumo();
+}
+
+// ===== FILTROS POR SEÇÃO =====
+function applyAbastFiltro() {
+  state.filtroVeiculo   = document.getElementById('abast-filtro-veiculo').value;
+  state.filtroMotorista = document.getElementById('abast-filtro-motorista').value;
+  state.filtroMesInicio = document.getElementById('abast-filtro-inicio').value;
+  state.filtroMesFim    = document.getElementById('abast-filtro-fim').value;
+  renderAbastecimentos();
+  loadIndicadores();
+  loadConsumo();
+}
+
+function clearAbastFiltro() {
+  document.getElementById('abast-filtro-veiculo').value   = '';
+  document.getElementById('abast-filtro-motorista').value = '';
+  document.getElementById('abast-filtro-inicio').value    = '';
+  document.getElementById('abast-filtro-fim').value       = '';
+  state.filtroVeiculo   = '';
+  state.filtroMotorista = '';
+  state.filtroMesInicio = '';
+  state.filtroMesFim    = '';
+  renderAbastecimentos();
+  loadIndicadores();
+  loadConsumo();
+}
+
+function applyMultaFiltro() {
+  state.filtroVeiculo   = document.getElementById('multa-filtro-veiculo').value;
+  state.filtroMotorista = document.getElementById('multa-filtro-motorista').value;
+  state.filtroStatus    = document.getElementById('multa-filtro-status').value;
+  state.filtroMesInicio = document.getElementById('multa-filtro-inicio').value;
+  state.filtroMesFim    = document.getElementById('multa-filtro-fim').value;
+  renderMultas();
+  loadIndicadores();
+}
+
+function clearMultaFiltro() {
+  document.getElementById('multa-filtro-veiculo').value   = '';
+  document.getElementById('multa-filtro-motorista').value = '';
+  document.getElementById('multa-filtro-status').value    = '';
+  document.getElementById('multa-filtro-inicio').value    = '';
+  document.getElementById('multa-filtro-fim').value       = '';
+  state.filtroVeiculo   = '';
+  state.filtroMotorista = '';
+  state.filtroStatus    = '';
+  state.filtroMesInicio = '';
+  state.filtroMesFim    = '';
+  renderMultas();
+  loadIndicadores();
+}
+
+function populateSectionFiltersWithData() {
+  const veiculos = state.veiculos || [];
+  const motoristas = state.motoristas || [];
+
+  // Filtros de Abastecimentos
+  const aVeic = document.getElementById('abast-filtro-veiculo');
+  const aMot  = document.getElementById('abast-filtro-motorista');
+  const mVeic = document.getElementById('multa-filtro-veiculo');
+  const mMot  = document.getElementById('multa-filtro-motorista');
+
+  if (aVeic) {
+    aVeic.innerHTML = '<option value="">Todos</option>';
+    veiculos.forEach(v => aVeic.innerHTML += `<option value="${v}">${v}</option>`);
+  }
+  if (aMot) {
+    aMot.innerHTML = '<option value="">Todos</option>';
+    motoristas.forEach(m => aMot.innerHTML += `<option value="${m}">${m}</option>`);
+  }
+  if (mVeic) {
+    mVeic.innerHTML = '<option value="">Todos</option>';
+    veiculos.forEach(v => mVeic.innerHTML += `<option value="${v}">${v}</option>`);
+  }
+  if (mMot) {
+    mMot.innerHTML = '<option value="">Todos</option>';
+    motoristas.forEach(m => mMot.innerHTML += `<option value="${m}">${m}</option>`);
+  }
 }
 
 // ===== FORMULÁRIOS =====
@@ -217,19 +281,8 @@ async function loadCombos() {
 }
 
 function populateCombos() {
-  // Veículos - Filtro Global
-  const filtroVeiculo = document.getElementById('filtroVeiculoGlobal');
-  filtroVeiculo.innerHTML = '<option value="">Todos os veículos</option>';
-  state.veiculos.forEach(v => {
-    filtroVeiculo.innerHTML += `<option value="${v}">${v}</option>`;
-  });
-
-  // Motoristas - Filtro Global
-  const filtroMotorista = document.getElementById('filtroMotoristaGlobal');
-  filtroMotorista.innerHTML = '<option value="">Todos os motoristas</option>';
-  state.motoristas.forEach(m => {
-    filtroMotorista.innerHTML += `<option value="${m}">${m}</option>`;
-  });
+  // Popular filtros inline das seções
+  populateSectionFiltersWithData();
 
   // Combos nos formulários
   const veiculoSelects = ['multa-veiculo', 'abast-veiculo', 'oleo-veiculo', 'dano-veiculo'];
@@ -533,17 +586,109 @@ function renderAbastecimentos() {
   const filtered = filterData(state.abastecimentos);
   const sorted = sortByDate(filtered);
 
-  tbody.innerHTML = sorted.map(a => `
-    <tr>
-      <td>${a.data}</td>
-      <td>${a.veiculo}</td>
-      <td>${a.motorista}</td>
-      <td>${Math.round(Number(a.km)).toLocaleString('pt-BR')}</td>
-      <td>${formatNumber(a.litros)}</td>
-      <td>R$ ${formatNumber(a.valor)}</td>
-      <td><button class="btn-small btn-edit" onclick="editAbastecimento(${a.rowIndex})">Editar</button></td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = sorted.map(a => {
+    const veiculoOptions = (state.veiculos || []).map(v =>
+      `<option value="${v}" ${v === a.veiculo ? 'selected' : ''}>${v}</option>`
+    ).join('');
+    const motoristaOptions = (state.motoristas || []).map(m =>
+      `<option value="${m}" ${m === a.motorista ? 'selected' : ''}>${m}</option>`
+    ).join('');
+
+    // Converter data dd/MM/yyyy para yyyy-MM-dd para o input type=date
+    const partes = a.data.split('/');
+    const dataISO = partes.length === 3 ? `${partes[2]}-${partes[1]}-${partes[0]}` : '';
+
+    return `
+    <tr id="abast-row-${a.rowIndex}">
+      <td class="view-data">${a.data}</td>
+      <td class="edit-data" style="display:none"><input type="date" value="${dataISO}" id="edit-abast-data-${a.rowIndex}"></td>
+
+      <td class="view-veiculo">${a.veiculo}</td>
+      <td class="edit-veiculo" style="display:none"><select id="edit-abast-veiculo-${a.rowIndex}">${veiculoOptions}</select></td>
+
+      <td class="view-motorista">${a.motorista}</td>
+      <td class="edit-motorista" style="display:none"><select id="edit-abast-motorista-${a.rowIndex}">${motoristaOptions}</select></td>
+
+      <td class="view-km">${Math.round(Number(a.km)).toLocaleString('pt-BR')}</td>
+      <td class="edit-km" style="display:none"><input type="number" value="${a.km}" id="edit-abast-km-${a.rowIndex}"></td>
+
+      <td class="view-litros">${formatNumber(a.litros)}</td>
+      <td class="edit-litros" style="display:none"><input type="number" step="0.01" value="${a.litros}" id="edit-abast-litros-${a.rowIndex}"></td>
+
+      <td class="view-valor">R$ ${formatNumber(a.valor)}</td>
+      <td class="edit-valor" style="display:none"><input type="number" step="0.01" value="${a.valor}" id="edit-abast-valor-${a.rowIndex}"></td>
+
+      <td>
+        <span class="view-acoes">
+          <button class="btn-small btn-edit" onclick="startEditAbast(${a.rowIndex})">✏️ Editar</button>
+        </span>
+        <span class="edit-acoes" style="display:none">
+          <button class="btn-save-inline" onclick="saveInlineAbast(${a.rowIndex})">✔ Salvar</button>
+          <button class="btn-cancel-inline" onclick="cancelInlineAbast(${a.rowIndex})">✕</button>
+        </span>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function startEditAbast(rowIndex) {
+  const row = document.getElementById(`abast-row-${rowIndex}`);
+  if (!row) return;
+  row.classList.add('editing-row');
+  // Mostrar campos edit, ocultar view
+  row.querySelectorAll('[class^="view-"]').forEach(el => el.style.display = 'none');
+  row.querySelectorAll('[class^="edit-"]').forEach(el => el.style.display = '');
+}
+
+function cancelInlineAbast(rowIndex) {
+  const row = document.getElementById(`abast-row-${rowIndex}`);
+  if (!row) return;
+  row.classList.remove('editing-row');
+  row.querySelectorAll('[class^="view-"]').forEach(el => el.style.display = '');
+  row.querySelectorAll('[class^="edit-"]').forEach(el => el.style.display = 'none');
+}
+
+async function saveInlineAbast(rowIndex) {
+  const row = document.getElementById(`abast-row-${rowIndex}`);
+  if (!row) return;
+
+  const dataVal    = document.getElementById(`edit-abast-data-${rowIndex}`).value;
+  const veiculo    = document.getElementById(`edit-abast-veiculo-${rowIndex}`).value;
+  const motorista  = document.getElementById(`edit-abast-motorista-${rowIndex}`).value;
+  const km         = document.getElementById(`edit-abast-km-${rowIndex}`).value;
+  const litros     = document.getElementById(`edit-abast-litros-${rowIndex}`).value;
+  const valor      = document.getElementById(`edit-abast-valor-${rowIndex}`).value;
+
+  // Feedback visual na linha
+  row.style.opacity = '0.5';
+  row.style.pointerEvents = 'none';
+
+  const result = await postApi('editAbastecimento', {
+    rowIndex, data: dataVal, veiculo, motorista, km, litros, valor
+  });
+
+  if (result && result.success) {
+    // Atualizar state local imediatamente
+    const idx = state.abastecimentos.findIndex(a => a.rowIndex === rowIndex);
+    if (idx >= 0) {
+      const partes = dataVal.split('-');
+      state.abastecimentos[idx] = {
+        ...state.abastecimentos[idx],
+        data: partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : dataVal,
+        veiculo, motorista,
+        km: Number(km), litros: Number(litros), valor: Number(valor)
+      };
+    }
+    // Re-renderizar a tabela sem recarregar do servidor
+    renderAbastecimentos();
+    // Atualizar indicadores e consumo em background
+    loadIndicadores();
+    loadConsumo();
+  } else {
+    row.style.opacity = '';
+    row.style.pointerEvents = '';
+    alert('Erro ao salvar. Tente novamente.');
+  }
 }
 
 function renderDanos() {
@@ -861,20 +1006,12 @@ async function saveAbastecimento() {
     valor: document.getElementById('abast-valor').value
   };
 
-  const editingRowIndex = state._editingAbastRowIndex || null;
-  let result;
-
-  if (editingRowIndex) {
-    data.rowIndex = editingRowIndex;
-    result = await postApi('editAbastecimento', data);
-  } else {
-    result = await postApi('addAbastecimento', data);
-  }
+  const result = await postApi('addAbastecimento', data);
 
   if (result) {
-    statusEl.textContent = editingRowIndex ? 'Atualizado com sucesso!' : 'Salvo com sucesso!';
+    statusEl.textContent = 'Salvo com sucesso!';
     statusEl.className = 'status-msg status-saved';
-    cancelEditAbastecimento();
+    clearForm('abast');
     loadAbastecimentos();
     loadIndicadores();
     loadConsumo();
@@ -886,71 +1023,14 @@ async function saveAbastecimento() {
   setTimeout(() => statusEl.textContent = '', 3000);
 }
 
-function setSelectValue(selectId, targetValue) {
-  const select = document.getElementById(selectId);
-  if (!select || !targetValue) return;
-  const normalized = String(targetValue).trim().toUpperCase();
-  let found = false;
-  for (const opt of select.options) {
-    if (String(opt.value).trim().toUpperCase() === normalized ||
-        String(opt.text).trim().toUpperCase() === normalized) {
-      select.value = opt.value;
-      found = true;
-      break;
-    }
-  }
-  // fallback direto caso o valor já bata
-  if (!found) select.value = targetValue;
-}
+// Função removida - edição agora é inline
+// function setSelectValue(...)
 
-function editAbastecimento(rowIndex) {
-  const abast = state.abastecimentos.find(a => a.rowIndex === rowIndex);
-  if (!abast) return;
+// Função removida - edição agora é inline
+// function editAbastecimento(...)
 
-  // Converte data de dd/MM/yyyy para yyyy-MM-dd (formato input[type=date])
-  const partes = abast.data.split('/');
-  const dataFormatada = partes.length === 3 ? `${partes[2]}-${partes[1]}-${partes[0]}` : '';
-
-  document.getElementById('abast-data').value = dataFormatada;
-  setSelectValue('abast-veiculo', abast.veiculo);
-  setSelectValue('abast-motorista', abast.motorista);
-  document.getElementById('abast-km').value = abast.km;
-  document.getElementById('abast-litros').value = abast.litros;
-  document.getElementById('abast-valor').value = abast.valor;
-
-  // Guarda o rowIndex para saber que estamos editando
-  state._editingAbastRowIndex = rowIndex;
-
-  // Atualiza visual do botão e mostra cancelar
-  const btnSalvar = document.getElementById('btnSalvarAbast');
-  btnSalvar.textContent = '💾 Atualizar abastecimento';
-  btnSalvar.style.background = '#e67e22';
-
-  let btnCancelar = document.getElementById('btnCancelarAbast');
-  if (!btnCancelar) {
-    btnCancelar = document.createElement('button');
-    btnCancelar.id = 'btnCancelarAbast';
-    btnCancelar.textContent = '✕ Cancelar';
-    btnCancelar.style.cssText = 'background:#888; margin-left:8px;';
-    btnCancelar.onclick = cancelEditAbastecimento;
-    btnSalvar.parentNode.insertBefore(btnCancelar, btnSalvar.nextSibling);
-  }
-
-  // Scroll para o formulário
-  document.getElementById('sec-abastecimentos').scrollIntoView({ behavior: 'smooth' });
-}
-
-function cancelEditAbastecimento() {
-  state._editingAbastRowIndex = null;
-  clearForm('abast');
-
-  const btnSalvar = document.getElementById('btnSalvarAbast');
-  btnSalvar.textContent = 'Salvar abastecimento';
-  btnSalvar.style.background = '';
-
-  const btnCancelar = document.getElementById('btnCancelarAbast');
-  if (btnCancelar) btnCancelar.remove();
-}
+// Função removida - edição agora é inline
+// function cancelEditAbastecimento(...)
 
 async function saveTrocaOleo() {
   const statusEl = document.getElementById('statusOleo');

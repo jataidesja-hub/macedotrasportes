@@ -38,52 +38,7 @@
     <button class="tab-btn" data-tab="veiculos">Veículos</button>
   </nav>
 
-  <!-- Filtros Globais -->
-  <!-- Filtros Globais -->
-  <div class="filtros-container">
-    <h3>🔍 Filtros de Busca</h3>
-    <div class="filtros-grid">
-      <label>
-        Veículo
-        <select id="filtroVeiculoGlobal">
-          <option value="">Todos os veículos</option>
-        </select>
-      </label>
-      <label>
-        Motorista
-        <select id="filtroMotoristaGlobal">
-          <option value="">Todos os motoristas</option>
-        </select>
-      </label>
-      <label>
-        Status (Multas/Danos)
-        <select id="filtroStatusGlobal">
-          <option value="">Todos</option>
-          <option value="Pendente">Pendente</option>
-          <option value="Pago">Pago / Resolvido</option>
-          <option value="Em reparo">Em reparo</option>
-        </select>
-      </label>
-      <label>
-        Buscar (Auto / Tipo)
-        <input type="text" id="filtroBuscaGlobal" placeholder="Digite para buscar...">
-      </label>
-    </div>
-    <div class="filtros-meses">
-      <label>
-        Período de:
-        <input type="month" id="filtroMesInicio">
-      </label>
-      <label>
-        até:
-        <input type="month" id="filtroMesFim">
-      </label>
-      <div class="filter-actions">
-        <button id="btnAplicarFiltros" class="btn-primary">🚀 Aplicar Todos os Filtros</button>
-        <button id="btnLimparFiltros" class="btn-secondary">🧹 Limpar</button>
-      </div>
-    </div>
-  </div>
+
 
   <!-- Indicadores -->
   <div class="indicadores-container" id="indicadores">
@@ -138,6 +93,34 @@
     <section id="sec-multas" class="secao" style="display:none">
       <h2>Multas</h2>
 
+      <!-- Filtro inline Multas -->
+      <div class="section-filter" id="filtro-multas">
+        <div class="section-filter-row">
+          <label>Veículo
+            <select id="multa-filtro-veiculo"><option value="">Todos</option></select>
+          </label>
+          <label>Motorista
+            <select id="multa-filtro-motorista"><option value="">Todos</option></select>
+          </label>
+          <label>Status
+            <select id="multa-filtro-status">
+              <option value="">Todos</option>
+              <option value="Pendente">Pendente</option>
+              <option value="Pago">Pago / Resolvido</option>
+              <option value="Em reparo">Em reparo</option>
+            </select>
+          </label>
+          <label>De
+            <input type="month" id="multa-filtro-inicio">
+          </label>
+          <label>Até
+            <input type="month" id="multa-filtro-fim">
+          </label>
+          <button class="btn-filtro-apply" onclick="applyMultaFiltro()">🔍 Filtrar</button>
+          <button class="btn-filtro-clear" onclick="clearMultaFiltro()">✕ Limpar</button>
+        </div>
+      </div>
+
       <!-- OCR Box -->
       <div class="ocr-box">
         <h3>📄 Leitura Automática de PDF</h3>
@@ -187,6 +170,27 @@
     <!-- Seção Abastecimentos -->
     <section id="sec-abastecimentos" class="secao" style="display:none">
       <h2>Abastecimentos</h2>
+
+      <!-- Filtro inline Abastecimentos -->
+      <div class="section-filter" id="filtro-abastecimentos">
+        <div class="section-filter-row">
+          <label>Veículo
+            <select id="abast-filtro-veiculo"><option value="">Todos</option></select>
+          </label>
+          <label>Motorista
+            <select id="abast-filtro-motorista"><option value="">Todos</option></select>
+          </label>
+          <label>De
+            <input type="month" id="abast-filtro-inicio">
+          </label>
+          <label>Até
+            <input type="month" id="abast-filtro-fim">
+          </label>
+          <button class="btn-filtro-apply" onclick="applyAbastFiltro()">🔍 Filtrar</button>
+          <button class="btn-filtro-clear" onclick="clearAbastFiltro()">✕ Limpar</button>
+        </div>
+      </div>
+
       <div class="form-grid">
         <label>Data<input type="date" id="abast-data"></label>
         <label>Veículo<select id="abast-veiculo"></select></label>
