@@ -88,6 +88,10 @@ function doPost(e) {
       adicionarAbastecimento(dados);
       result.success = true;
       break;
+    case 'editAbastecimento':
+      editarAbastecimento(dados);
+      result.success = true;
+      break;
     case 'addDano':
       adicionarDano(dados);
       result.success = true;
@@ -265,7 +269,8 @@ function getDadosAbastecimentos() {
   const values = sh.getRange(2, 1, lastRow - 1, 6).getValues();
   const tz = Session.getScriptTimeZone();
 
-  return values.map(r => ({
+  return values.map((r, i) => ({
+    rowIndex: i + 2,
     data: r[0] ? Utilities.formatDate(new Date(r[0]), tz, 'dd/MM/yyyy') : '',
     veiculo: r[1] || '',
     motorista: r[2] || '',
@@ -755,6 +760,16 @@ function adicionarAbastecimento(dados) {
   const litros = dados.litros ? Number(dados.litros) : 0;
   const valor = dados.valor ? Number(dados.valor) : 0;
   sh.appendRow([data, dados.veiculo, dados.motorista, km, litros, valor]);
+}
+
+function editarAbastecimento(dados) {
+  const sh = SpreadsheetApp.getActive().getSheetByName('Abastecimentos');
+  if (!sh || !dados.rowIndex) return;
+  const data = parseDateLocal(dados.data);
+  const km = dados.km ? Number(dados.km) : 0;
+  const litros = dados.litros ? Number(dados.litros) : 0;
+  const valor = dados.valor ? Number(dados.valor) : 0;
+  sh.getRange(dados.rowIndex, 1, 1, 6).setValues([[data, dados.veiculo, dados.motorista, km, litros, valor]]);
 }
 
 function adicionarDano(dados) {

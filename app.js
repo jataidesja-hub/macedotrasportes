@@ -538,9 +538,10 @@ function renderAbastecimentos() {
       <td>${a.data}</td>
       <td>${a.veiculo}</td>
       <td>${a.motorista}</td>
-      <td>${formatNumber(a.km)}</td>
+      <td>${Math.round(Number(a.km)).toLocaleString('pt-BR')}</td>
       <td>${formatNumber(a.litros)}</td>
       <td>R$ ${formatNumber(a.valor)}</td>
+      <td><button class="btn-small btn-edit" onclick="editAbastecimento(${a.rowIndex})">Editar</button></td>
     </tr>
   `).join('');
 }
@@ -860,12 +861,20 @@ async function saveAbastecimento() {
     valor: document.getElementById('abast-valor').value
   };
 
-  const result = await postApi('addAbastecimento', data);
+  const editingRowIndex = state._editingAbastRowIndex || null;
+  let result;
+
+  if (editingRowIndex) {
+    data.rowIndex = editingRowIndex;
+    result = await postApi('editAbastecimento', data);
+  } else {
+    result = await postApi('addAbastecimento', data);
+  }
 
   if (result) {
-    statusEl.textContent = 'Salvo com sucesso!';
+    statusEl.textContent = editingRowIndex ? 'Atualizado com sucesso!' : 'Salvo com sucesso!';
     statusEl.className = 'status-msg status-saved';
-    clearForm('abast');
+    cancelEditAbastecimento();
     loadAbastecimentos();
     loadIndicadores();
     loadConsumo();
@@ -875,6 +884,55 @@ async function saveAbastecimento() {
   }
 
   setTimeout(() => statusEl.textContent = '', 3000);
+}
+
+function editAbastecimento(rowIndex) {
+  const abast = state.abastecimentos.find(a => a.rowIndex === rowIndex);
+  if (!abast) return;
+
+  // Converte data de dd/MM/yyyy para yyyy-MM-dd (formato input[type=date])
+  const partes = abast.data.split('/');
+  const dataFormatada = partes.length === 3 ? `${partes[2]}-${partes[1]}-${partes[0]}` : '';
+
+  document.getElementById('abast-data').value = dataFormatada;
+  document.getElementById('abast-veiculo').value = abast.veiculo;
+  document.getElementById('abast-motorista').value = abast.motorista;
+  document.getElementById('abast-km').value = abast.km;
+  document.getElementById('abast-litros').value = abast.litros;
+  document.getElementById('abast-valor').value = abast.valor;
+
+  // Guarda o rowIndex para saber que estamos editando
+  state._editingAbastRowIndex = rowIndex;
+
+  // Atualiza visual do botão e mostra cancelar
+  const btnSalvar = document.getElementById('btnSalvarAbast');
+  btnSalvar.textContent = '💾 Atualizar abastecimento';
+  btnSalvar.style.background = '#e67e22';
+
+  let btnCancelar = document.getElementById('btnCancelarAbast');
+  if (!btnCancelar) {
+    btnCancelar = document.createElement('button');
+    btnCancelar.id = 'btnCancelarAbast';
+    btnCancelar.textContent = '✕ Cancelar';
+    btnCancelar.style.cssText = 'background:#888; margin-left:8px;';
+    btnCancelar.onclick = cancelEditAbastecimento;
+    btnSalvar.parentNode.insertBefore(btnCancelar, btnSalvar.nextSibling);
+  }
+
+  // Scroll para o formulário
+  document.getElementById('sec-abastecimentos').scrollIntoView({ behavior: 'smooth' });
+}
+
+function cancelEditAbastecimento() {
+  state._editingAbastRowIndex = null;
+  clearForm('abast');
+
+  const btnSalvar = document.getElementById('btnSalvarAbast');
+  btnSalvar.textContent = 'Salvar abastecimento';
+  btnSalvar.style.background = '';
+
+  const btnCancelar = document.getElementById('btnCancelarAbast');
+  if (btnCancelar) btnCancelar.remove();
 }
 
 async function saveTrocaOleo() {
