@@ -886,6 +886,23 @@ async function saveAbastecimento() {
   setTimeout(() => statusEl.textContent = '', 3000);
 }
 
+function setSelectValue(selectId, targetValue) {
+  const select = document.getElementById(selectId);
+  if (!select || !targetValue) return;
+  const normalized = String(targetValue).trim().toUpperCase();
+  let found = false;
+  for (const opt of select.options) {
+    if (String(opt.value).trim().toUpperCase() === normalized ||
+        String(opt.text).trim().toUpperCase() === normalized) {
+      select.value = opt.value;
+      found = true;
+      break;
+    }
+  }
+  // fallback direto caso o valor já bata
+  if (!found) select.value = targetValue;
+}
+
 function editAbastecimento(rowIndex) {
   const abast = state.abastecimentos.find(a => a.rowIndex === rowIndex);
   if (!abast) return;
@@ -895,8 +912,8 @@ function editAbastecimento(rowIndex) {
   const dataFormatada = partes.length === 3 ? `${partes[2]}-${partes[1]}-${partes[0]}` : '';
 
   document.getElementById('abast-data').value = dataFormatada;
-  document.getElementById('abast-veiculo').value = abast.veiculo;
-  document.getElementById('abast-motorista').value = abast.motorista;
+  setSelectValue('abast-veiculo', abast.veiculo);
+  setSelectValue('abast-motorista', abast.motorista);
   document.getElementById('abast-km').value = abast.km;
   document.getElementById('abast-litros').value = abast.litros;
   document.getElementById('abast-valor').value = abast.valor;
