@@ -1281,8 +1281,6 @@ function clearForm(prefix) {
 }
 
 // ===== OCR - EXTRAÇÃO DE DADOS DE PDF =====
-const VISION_API_KEY = 'AIzaSyDyVTtNJPx7dYP5j5Dz5VFQXq01KZyfB2k';
-const VISION_API_URL = `https://vision.googleapis.com/v1/images:annotate?key=${VISION_API_KEY}`;
 
 async function extractOCRData() {
   const fileInput = document.getElementById('multa-pdf-ocr');
