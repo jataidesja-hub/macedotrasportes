@@ -1423,19 +1423,18 @@ function parseMultaText(text) {
     }
   }
 
-  // Extrair TIPO/DESCRIÇÃO DA INFRAÇÃO
+  // Extrair TIPO/DESCRIÇÃO DA INFRAÇÃO (verbos de infração primeiro; ignora linhas de prazo/defesa)
+  const tipoInvalido = /DATA\s*LIMITE|DEFESA|INTERPOSI|RECURSO|NOTIFICA/i;
   const tipoMatches = [
-    text.match(/DESCRI[CÇ][AÃ]O\s*(?:DA\s*)?(?:INFRA[CÇ][AÃ]O)?\s*:?\s*([^\n]+)/i),
-    text.match(/INFRA[CÇ][AÃ]O\s*:?\s*([^\n]+)/i),
-    text.match(/TRANSITAR\s+[^\n]+/i),
-    text.match(/DIRIGIR\s+[^\n]+/i),
-    text.match(/ESTACIONAR\s+[^\n]+/i)
+    text.match(/(?:TRANSITAR|DIRIGIR|ESTACIONAR|PARAR|DEIXAR|AVAN[CÇ]AR|CONDUZIR|USAR|UTILIZAR)\s+[^\n]+(?:\n[^\n]{1,20}(?=\n))?/i),
+    text.match(/DESCRI[CÇ][AÃ]O\s*(?:DA\s*)?INFRA[CÇ][AÃ]O\s*:?\s*([^\n]+)/i),
+    text.match(/INFRA[CÇ][AÃ]O\s*:?\s*([^\n]+)/i)
   ];
 
   for (const match of tipoMatches) {
     if (match) {
-      const tipo = (match[1] || match[0]).trim();
-      if (tipo.length > 10) {
+      const tipo = (match[1] || match[0]).replace(/\s*\n\s*/g,' ').trim();
+      if (tipo.length > 10 && !tipoInvalido.test(tipo)) {
         dados.tipo = tipo.substring(0, 100); // Limitar tamanho
         break;
       }
