@@ -1376,14 +1376,14 @@ function parseMultaText(text) {
   }
 
   // Extrair DATA (formato DD/MM/YYYY)
-  const dataMatch = text.match(/\b(\d{2}\/\d{2}\/\d{4})\b/);
+  const dataMatch = text.match(/\bDATA\s+HORA\b[\s\S]{0,80}?(\d{2}\/\d{2}\/\d{4})/i) || text.match(/LOCAL\s+DA\s+INFRA[^\d]{0,120}?(\d{2}\/\d{2}\/\d{4})/i) || text.match(/\b(\d{2}\/\d{2}\/\d{4})\b/);
   if (dataMatch) {
     const partes = dataMatch[1].split('/');
     dados.data = `${partes[2]}-${partes[1]}-${partes[0]}`; // Formato YYYY-MM-DD
   }
 
   // Extrair DATA LIMITE PARA IDENTIFICAÇÃO DO CONDUTOR
-  const dataLimiteMatch = text.match(/(?:DATA\s*LIMITE\s*(?:PARA\s*)?IDENTIFICA[ÇC][AÃ]O(?:\s*DO\s*CONDUTOR)?|IDENTIFICA[ÇC][AÃ]O\s*AT[ÉE]).*?(\d{2}\/\d{2}\/\d{4})/is);
+  const dataLimiteMatch = text.match(/(?:DATA\s*LIMITE\s*(?:PARA\s*)?IDENTIFICA[ÇC][AÃ]O(?:\s*DO\s*CONDUTOR)?|IDENTIFICA[ÇC][AÃ]O\s*AT[ÉE])[^\d]{0,80}(\d{2}\/\d{2}\/\d{4})/i);
   if (dataLimiteMatch) {
     const partes = dataLimiteMatch[1].split('/');
     dados.dataLimite = `${partes[2]}-${partes[1]}-${partes[0]}`;
@@ -1426,6 +1426,7 @@ function parseMultaText(text) {
   // Extrair TIPO/DESCRIÇÃO DA INFRAÇÃO (verbos de infração primeiro; ignora linhas de prazo/defesa)
   const tipoInvalido = /DATA\s*LIMITE|DEFESA|INTERPOSI|RECURSO|NOTIFICA/i;
   const tipoMatches = [
+    text.match(/DESCRI[CÇ][AÃ]O\s*DA\s*INFRA[CÇ][AÃ]O\s*:?\s*([\s\S]+?)\s*(?=MEDI[CÇ][AÃ]O\s*REALIZADA|VALOR\s*CONSIDERADO|LIMITE\s*REGULAMENTADO|N[UÚ]MERO\s*RENAINF|$)/i),
     text.match(/(?:TRANSITAR|DIRIGIR|ESTACIONAR|PARAR|DEIXAR|AVAN[CÇ]AR|CONDUZIR|USAR|UTILIZAR)\s+[^\n]+(?:\n[^\n]{1,20}(?=\n))?/i),
     text.match(/DESCRI[CÇ][AÃ]O\s*(?:DA\s*)?INFRA[CÇ][AÃ]O\s*:?\s*([^\n]+)/i),
     text.match(/INFRA[CÇ][AÃ]O\s*:?\s*([^\n]+)/i)
