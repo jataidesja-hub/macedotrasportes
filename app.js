@@ -1594,24 +1594,24 @@ async function extractText(file) {
       reader.readAsArrayBuffer(file);
     });
   } else {
-    const base64 = await fileToBase64(file);
-    const response = await fetch(VISION_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        requests: [{
-          image: { content: base64 },
-          features: [{ type: 'TEXT_DETECTION', maxResults: 1 }]
-        }]
-      })
-    });
-    const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
-    if (!data.responses || !data.responses[0] || !data.responses[0].textAnnotations) {
-      throw new Error('Não foi possível extrair texto');
-    }
-    return data.responses[0].textAnnotations[0].description;
+    // OCR gratuito no navegador (Tesseract.js) - substitui a Vision API paga
+    await loadTesseract();
+    const result = await Tesseract.recognize(file, 'por');
+    const text = result && result.data && result.data.text;
+    if (!text || !text.trim()) throw new Error('Não foi possível extrair texto');
+    return text;
   }
+}
+
+function loadTesseract() {
+  if (window.Tesseract) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('Falha ao carregar o leitor de imagem (OCR)'));
+    document.head.appendChild(s);
+  });
 }
 
 async function extractOCRDataCRLV() {
